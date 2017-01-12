@@ -41,7 +41,7 @@ def load_robot(env, urdf_path=None, srdf_path=None):
 
 # OpenRave C++ plugin is called by sending string command. We can add parameters in this function to construct the command, and decode in C++ side.
 # For example, I can add an option whether to turn on the parallelization or not
-def SendStartPlanningCommand(Module,robotname=None,goal=None,parallelization=False):
+def SendStartPlanningCommand(Module,robotname=None,goal=None,parallelization=None):
     cmd = ['StartPlanning']
 
     cmd.append('robotname')
@@ -52,7 +52,7 @@ def SendStartPlanningCommand(Module,robotname=None,goal=None,parallelization=Fal
     for g in goal:
         cmd.append(g)
 
-    if(parallelization):
+    if(parallelization is not None):
         cmd.append('parallelization')
 
         if(parallelization):
