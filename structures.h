@@ -10,6 +10,9 @@ class Structure {
 	int id;
 public:
 	Structure(int _id, OpenRAVE::KinBodyPtr _kinbody = boost::shared_ptr<OpenRAVE::KinBody>()) : id(_id), kinbody(_kinbody) {}
+	OpenRAVE::KinBodyPtr get_kinbody() const { return kinbody; }
+	void set_kinbody(OpenRAVE::KinBodyPtr kinbody_) { kinbody = kinbody_; }
+	int get_id() const { return id; } ;
 };
 
 class Box : public Structure {

@@ -1,5 +1,6 @@
 #include <openrave/plugin.h>
 #include <boost/bind.hpp>
+#include "environment_handler.h"
 #include <iostream>
 using namespace OpenRAVE;
 
@@ -14,8 +15,6 @@ class EscherMotionPlanning : public ModuleBase
         
         bool Planning(std::ostream& sout, std::istream& sinput)
         {
-            std::cout<< "hello world."<<std::endl;
-
             std::string robot_name;
 
             std::string param;
@@ -66,7 +65,7 @@ class EscherMotionPlanning : public ModuleBase
             SetActiveRobots(robot_name,robots);
 
             // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
-
+            Environment_handler eh{GetInterfaceType(), _penv};
             //****************************************************************************//
             // Something about constructing environment objects. (walls, ground, and etc.)//
             //****************************************************************************//
