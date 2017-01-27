@@ -16,7 +16,7 @@ class Environment_handler {
 public:
 	Environment_handler(OpenRAVE::InterfaceType i_type, OpenRAVE::EnvironmentBasePtr _penv);
 	void update_environment(OpenRAVE::InterfaceType i_type);
-	double dist_to_boundary() {}
+	double dist_to_boundary(dReal x, dReal y, dReal z) {}
 };
 
 #endif

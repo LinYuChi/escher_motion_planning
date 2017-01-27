@@ -36,10 +36,10 @@ vector<AABB> Box::get_parameter() const {
 	return ret_vec;
 }
 
-Ground_box::Ground_box(OpenRAVE::KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
+Ground_box::Ground_box(KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
 					   ground_box_x_c, ground_box_y_c, ground_box_z_c, ground_box_theta_c,
 					   ground_box_ex_c, ground_box_ey_c, ground_box_ez_c) {}
 
-General_box::General_box(OpenRAVE::KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
-					   ground_box_x_c, ground_box_y_c, ground_box_z_c, ground_box_theta_c,
-					   ground_box_ex_c, ground_box_ey_c, ground_box_ez_c) {}
+General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal _z, dReal _theta, 
+						 dReal _ex, dReal _ey, dReal _ez) : Box(_kinbody, Vector(255/255, 255/255, 255/255),
+					   	 _x, _y, _z, _theta, _ex, _ey, _ez) {}

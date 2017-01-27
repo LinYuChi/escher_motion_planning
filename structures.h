@@ -61,7 +61,9 @@ public:
 
 class General_box : public Box {
 public:
-	General_box(OpenRAVE::KinBodyPtr _kinbody);
+	General_box(OpenRAVE::KinBodyPtr _kinbody, OpenRAVE::dReal _x, OpenRAVE::dReal _y,
+				OpenRAVE::dReal _z, OpenRAVE::dReal _theta, OpenRAVE::dReal _ex,
+				OpenRAVE::dReal _ey, OpenRAVE::dReal _ez);
 };
 
 // class Trimesh_surface : public Structure {

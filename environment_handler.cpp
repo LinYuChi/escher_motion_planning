@@ -14,7 +14,10 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 	}
 
 	Ground_box ground{RaveCreateKinBody(penv)};
+	General_box wall{RaveCreateKinBody(penv), 0.2, 0.8, 2.4, 0, .9, .1, .1};
 	structures.push_back(&ground);
+	structures.push_back(&wall);
+
 
 	for(Structure* structure : structures) {
 		structure->get_kinbody()->InitFromBoxes(structure->get_parameter(), true);
