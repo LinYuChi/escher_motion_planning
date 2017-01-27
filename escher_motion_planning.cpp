@@ -65,7 +65,7 @@ class EscherMotionPlanning : public ModuleBase
             SetActiveRobots(robot_name,robots);
 
             // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
-            Environment_handler eh{GetInterfaceType(), _penv};
+            Environment_handler env_handler{GetInterfaceType(), GetEnv()};
             //****************************************************************************//
             // Something about constructing environment objects. (walls, ground, and etc.)//
             //****************************************************************************//

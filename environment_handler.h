@@ -6,13 +6,15 @@
 #include <vector>
 
 class Environment_handler {
-	std::vector<Box> structures;
+	std::vector<Structure*> structures;
 	OpenRAVE::EnvironmentBasePtr penv;
+	double start_dist_to_boundary;
+	double goal_dist_to_boundary;
 	double goal_x;
 	double goal_y;
 	double goal_z;
 public:
-	Environment_handler(OpenRAVE::InterfaceType i_type, OpenRAVE::EnvironmentBasePtr penv_);
+	Environment_handler(OpenRAVE::InterfaceType i_type, OpenRAVE::EnvironmentBasePtr _penv);
 	void update_environment(OpenRAVE::InterfaceType i_type);
 	double dist_to_boundary() {}
 };
