@@ -3,11 +3,12 @@
 
 using namespace OpenRAVE;
 using std::vector;
+using std::abs; using std::min;
 
 const dReal ground_box_x_c = 2.5;
 const dReal ground_box_y_c = 0;
 const dReal ground_box_z_c = -0.005;
-const dReal ground_box_theta_c = 0;
+const dReal ground_box_theta_c = 10;
 const dReal ground_box_ex_c = 3.5;
 const dReal ground_box_ey_c = 3.5;
 const dReal ground_box_ez_c = 0.005;
@@ -36,10 +37,23 @@ vector<AABB> Box::get_parameter() const {
 	return ret_vec;
 }
 
+bool Box::within_x_boundary(const Vector & projected) const {
+	return abs(projected[0]) <= ex;
+}
+
+bool Box::within_y_boundary(const Vector & projected) const {
+	return abs(projected[1]) <= ey;
+}
+
+dReal Box::min_dist_to_x_bound(const OpenRAVE::Vector & projected) const {
+	return ey - abs(projected[1]);
+}
+
+
 Ground_box::Ground_box(KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
 					   ground_box_x_c, ground_box_y_c, ground_box_z_c, ground_box_theta_c,
 					   ground_box_ex_c, ground_box_ey_c, ground_box_ez_c) {}
 
 General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal _z, dReal _theta, 
-						 dReal _ex, dReal _ey, dReal _ez) : Box(_kinbody, Vector(255/255, 255/255, 255/255),
+						 dReal _ex, dReal _ey, dReal _ez) : Box(_kinbody, Vector(210/255, 210/255, 210/255),
 					   	 _x, _y, _z, _theta, _ex, _ey, _ez) {}

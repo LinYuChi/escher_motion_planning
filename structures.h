@@ -15,11 +15,16 @@ public:
 	Structure(OpenRAVE::KinBodyPtr _kinbody) : kinbody(_kinbody), id(num_structures++) { set_name(); }
 	OpenRAVE::KinBodyPtr get_kinbody() const { return kinbody; }
 
+	virtual OpenRAVE::dReal get_height() const = 0;
 	virtual OpenRAVE::Vector get_color() const = 0;
 
 	virtual OpenRAVE::Transform get_transform() const = 0;
 	virtual OpenRAVE::Transform get_inverse_transform() const = 0;
 	virtual std::vector<OpenRAVE::AABB> get_parameter() const = 0;
+
+	/*** BOX-SPECIFIC FNS BELOW ***/
+	virtual bool within_x_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual bool within_y_boundary(const OpenRAVE::Vector & projected) const = 0;
 };
 
 class Box : public Structure {
@@ -46,12 +51,18 @@ public:
 		OpenRAVE::dReal _z, OpenRAVE::dReal _theta, OpenRAVE::dReal _ex,
 		OpenRAVE::dReal _ey, OpenRAVE::dReal _ez);
 
-	double get_height() const { return z + ez; }
+	OpenRAVE::dReal get_height() const { return z + ez; }
 	OpenRAVE::Vector get_color() const { return color; }
 
 	OpenRAVE::Transform get_transform() const;
 	OpenRAVE::Transform get_inverse_transform() const;
 	std::vector<OpenRAVE::AABB> get_parameter() const;
+
+	bool within_x_boundary(const OpenRAVE::Vector & projected) const;
+	bool within_y_boundary(const OpenRAVE::Vector & projected) const;
+
+	OpenRAVE::dReal min_dist_to_x_bound(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::dReal min_dist_to_y_bound(const OpenRAVE::Vector & projected) const;
 };
 
 class Ground_box : public Box {
