@@ -57,16 +57,16 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 double Environment_handler::dist_to_boundary(dReal x, dReal y, dReal z) {
 	double nearest_boundary_dist = numeric_limits<double>::max();
 	
-	Vector point(x, y, z, 1);
-	Vector over_boundary_point(0, 0, 0, 1);
+	Vector point{x, y, z, 1};
 
 	for(Structure* structure : structures) {
 		if(z <= structure->get_height() + error_c) { // ignore surfaces below point as their boundaries may be "overruled"
 			Vector projected_point = structure->get_inverse_transform() * point;
 
 			if(structure->within_x_boundary(projected_point)) {
-				// double potential_boundary_dists = min(abs(projected_point[1] - ), 
-				// 										   abs());
+				if(dist_to_left_bound(projected_point) < nearest_boundary_dist) {
+					if()
+				}
 			}
 		}
 	}

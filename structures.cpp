@@ -14,6 +14,8 @@ const dReal ground_box_ey_c = 3.5;
 const dReal ground_box_ez_c = 0.005;
 const Vector ground_box_color_c = Vector(120.0/255, 120.0/255, 120.0/255);
 
+const dReal box_granularity_c = .01;
+
 int Structure::num_structures = 0;
 
 Box::Box(KinBodyPtr _kinbody, Vector _color, dReal _x, dReal _y, dReal _z, dReal _theta, 
@@ -37,16 +39,48 @@ vector<AABB> Box::get_parameter() const {
 	return ret_vec;
 }
 
-bool Box::within_x_boundary(const Vector & projected) const {
+bool Box::within_vertical_boundary(const Vector & projected) const {
 	return abs(projected[0]) <= ex;
 }
 
-bool Box::within_y_boundary(const Vector & projected) const {
+bool Box::within_horizontal_boundary(const Vector & projected) const {
 	return abs(projected[1]) <= ey;
 }
 
-dReal Box::min_dist_to_x_bound(const OpenRAVE::Vector & projected) const {
-	return ey - abs(projected[1]);
+dReal Box::dist_to_top_bound(const Vector & projected) const {
+	return abs(ey - projected[1]);
+}
+
+dReal Box::dist_to_bot_bound(const Vector & projected) const {
+	return abs(ex - projected[0]);
+}
+
+dReal Box::dist_to_left_bound(const Vector & projected) const {
+	return abs(ey - projected[1]);
+}
+
+dReal Box::dist_to_right_bound(const Vector & projected) const {
+	return abs(ex - projected[0]);
+}
+
+Vector over_top_boundary(const Vector & projected) const {
+	Vector over_boundary_point{ex + box_granularity_c, projected[1], 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+Vector over_bot_boundary(const Vector & projected) const {
+	Vector over_boundary_point{-1 * (ex + box_granularity_c), projected[1], 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+Vector over_left_boundary(const Vector & projected) const {
+	Vector over_boundary_point{projected[0], -1 * (ey + box_granularity_c), 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+Vector over_right_boundary(const Vector & projected) const {
+	Vector over_boundary_point{projected[0], ey + box_granularity_c, 0, 1};
+	return get_transform() * over_boundary_point;
 }
 
 

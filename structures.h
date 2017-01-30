@@ -23,8 +23,16 @@ public:
 	virtual std::vector<OpenRAVE::AABB> get_parameter() const = 0;
 
 	/*** BOX-SPECIFIC FNS BELOW ***/
-	virtual bool within_x_boundary(const OpenRAVE::Vector & projected) const = 0;
-	virtual bool within_y_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual bool within_vertical_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual bool within_horizontal_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::dReal dist_to_top_bound(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::dReal dist_to_bot_bound(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::dReal dist_to_left_bound(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::dReal dist_to_right_bound(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_top_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_bot_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_left_boundary(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_right_boundary(const OpenRAVE::Vector & projected) const = 0;
 };
 
 class Box : public Structure {
@@ -58,11 +66,18 @@ public:
 	OpenRAVE::Transform get_inverse_transform() const;
 	std::vector<OpenRAVE::AABB> get_parameter() const;
 
-	bool within_x_boundary(const OpenRAVE::Vector & projected) const;
-	bool within_y_boundary(const OpenRAVE::Vector & projected) const;
+	bool within_vertical_boundary(const OpenRAVE::Vector & projected) const;
+	bool within_horizontal_boundary(const OpenRAVE::Vector & projected) const;
 
-	OpenRAVE::dReal min_dist_to_x_bound(const OpenRAVE::Vector & projected) const;
-	OpenRAVE::dReal min_dist_to_y_bound(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::dReal dist_to_top_bound(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::dReal dist_to_bot_bound(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::dReal dist_to_left_bound(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::dReal dist_to_right_bound(const OpenRAVE::Vector & projected) const;
+
+	OpenRAVE::Vector over_top_boundary(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::Vector over_bot_boundary(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::Vector over_left_boundary(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::Vector over_right_boundary(const OpenRAVE::Vector & projected) const;
 };
 
 class Ground_box : public Box {
