@@ -7,7 +7,7 @@ using std::abs; using std::min; using std::sqrt;
 
 const dReal ground_box_x_c = 0;
 const dReal ground_box_y_c = 0;
-const dReal ground_box_z_c = -0.005;
+const dReal ground_box_z_c = 0;
 const dReal ground_box_theta_c = 0;
 const dReal ground_box_ex_c = 5.5;
 const dReal ground_box_ey_c = 3.5;
@@ -106,6 +106,27 @@ Vector Box::over_pos_x_bound(const Vector & projected) const {
 
 Vector Box::over_neg_x_bound(const Vector & projected) const {
 	Vector over_boundary_point{-1 * (ex + box_granularity_c), projected[1], 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+/*** CORNER POINTS ***/
+Vector Box::over_quadrant_one_corner(const Vector & projected) const {
+	Vector over_boundary_point{ex + box_granularity_c, ey + box_granularity_c, 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+Vector Box::over_quadrant_two_corner(const Vector & projected) const {
+	Vector over_boundary_point{-1 * (ex + box_granularity_c), ey + box_granularity_c, 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+Vector Box::over_quadrant_three_corner(const Vector & projected) const {
+	Vector over_boundary_point{-1 * (ex + box_granularity_c), -1 * (ey + box_granularity_c), 0, 1};
+	return get_transform() * over_boundary_point;
+}
+
+Vector Box::over_quadrant_four_corner(const Vector & projected) const {
+	Vector over_boundary_point{ex + box_granularity_c, -1 * (ey + box_granularity_c), 0, 1};
 	return get_transform() * over_boundary_point;
 }
 

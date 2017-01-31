@@ -4,9 +4,10 @@
 #include "structures.h"
 
 #include <vector>
+#include <memory>
 
 class Environment_handler {
-	std::vector<Structure*> structures;
+	std::vector<std::unique_ptr<Structure>> structures;
 	OpenRAVE::EnvironmentBasePtr penv;
 	// double start_dist_to_boundary;
 	// double goal_dist_to_boundary;

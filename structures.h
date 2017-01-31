@@ -37,6 +37,11 @@ public:
 	virtual OpenRAVE::Vector over_neg_y_bound(const OpenRAVE::Vector & projected) const = 0;
 	virtual OpenRAVE::Vector over_pos_x_bound(const OpenRAVE::Vector & projected) const = 0;
 	virtual OpenRAVE::Vector over_neg_x_bound(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_quadrant_one_corner(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_quadrant_two_corner(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_quadrant_three_corner(const OpenRAVE::Vector & projected) const = 0;
+	virtual OpenRAVE::Vector over_quadrant_four_corner(const OpenRAVE::Vector & projected) const = 0;
+
 };
 
 class Box : public Structure {
@@ -87,6 +92,11 @@ public:
 	OpenRAVE::Vector over_neg_y_bound(const OpenRAVE::Vector & projected) const;
 	OpenRAVE::Vector over_pos_x_bound(const OpenRAVE::Vector & projected) const;
 	OpenRAVE::Vector over_neg_x_bound(const OpenRAVE::Vector & projected) const;
+
+	OpenRAVE::Vector over_quadrant_one_corner(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::Vector over_quadrant_two_corner(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::Vector over_quadrant_three_corner(const OpenRAVE::Vector & projected) const;
+	OpenRAVE::Vector over_quadrant_four_corner(const OpenRAVE::Vector & projected) const;
 };
 
 class Ground_box : public Box {
