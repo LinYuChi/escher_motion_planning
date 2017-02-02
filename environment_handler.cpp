@@ -43,7 +43,7 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 		penv->Remove(structure->get_kinbody());
 	}
 
-	std::unique_ptr<Structure> wall (new General_box{RaveCreateKinBody(penv), 0.5, -.8, 2.4, 0, 0.1, .1, .1});
+	std::unique_ptr<Structure> wall (new General_box{RaveCreateKinBody(penv), -4, -4, 0, 0, 4, 4 , .005});
 	std::unique_ptr<Structure> ground (new Ground_box{RaveCreateKinBody(penv)});
 	structures.push_back(std::move(wall));
 	structures.push_back(std::move(ground));

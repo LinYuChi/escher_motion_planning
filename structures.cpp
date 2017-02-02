@@ -9,8 +9,8 @@ const dReal ground_box_x_c = 0;
 const dReal ground_box_y_c = 0;
 const dReal ground_box_z_c = 0;
 const dReal ground_box_theta_c = 0;
-const dReal ground_box_ex_c = 5.5;
-const dReal ground_box_ey_c = 3.5;
+const dReal ground_box_ex_c = 4;
+const dReal ground_box_ey_c = 4;
 const dReal ground_box_ez_c = 0.005;
 const Vector ground_box_color_c = Vector(120.0/255, 120.0/255, 120.0/255);
 
@@ -37,7 +37,7 @@ Transform Box::get_inverse_transform() const {
 
 vector<AABB> Box::get_parameter() const {
 	vector<AABB> ret_vec(1);
-	ret_vec[0] = {RaveVector<dReal>(x, y, z), RaveVector<dReal>(ex, ey, ez)};
+	ret_vec[0] = {Vector(0, 0, 0), Vector(ex, ey, ez)};
 	return ret_vec;
 }
 
@@ -136,5 +136,5 @@ Ground_box::Ground_box(KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
 					   ground_box_ex_c, ground_box_ey_c, ground_box_ez_c) {}
 
 General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal _z, dReal _theta, 
-						 dReal _ex, dReal _ey, dReal _ez) : Box(_kinbody, Vector(210/255, 210/255, 210/255),
+						 dReal _ex, dReal _ey, dReal _ez) : Box(_kinbody, Vector(220/255, 220/255, 220/255),
 					   	 _x, _y, _z, _theta, _ex, _ey, _ez) {}
