@@ -5,13 +5,12 @@ using namespace OpenRAVE;
 using std::vector;
 using std::abs; using std::min; using std::sqrt;
 
-const dReal ground_box_x_c = 0;
+const dReal ground_box_x_c = 2.5;
 const dReal ground_box_y_c = 0;
-const dReal ground_box_z_c = 0;
+const dReal ground_box_thickness_c = .01;
 const dReal ground_box_theta_c = 0;
-const dReal ground_box_ex_c = 4;
-const dReal ground_box_ey_c = 4;
-const dReal ground_box_ez_c = 0.005;
+const dReal ground_box_ex_c = 3.5;
+const dReal ground_box_ey_c = 3.5;
 const Vector ground_box_color_c = Vector(120.0/255, 120.0/255, 120.0/255);
 
 const dReal box_granularity_c = .01;
@@ -90,28 +89,49 @@ dReal Box::dist_from_quadrant_four_corner(const Vector & projected) const {
 
 /*** BOUNDARY POINTS ***/
 Vector Box::over_pos_y_bound(const Vector & projected) const {
-	Vector over_boundary_point{projected[0], ey + box_granularity_c, 0, 1};
+	Vector over_boundary_point{projected[0], 0, 0, 1};
+	if(projected_point[1] > ey) {
+		over_boundary_point[1] = ey - box_granularity_c;
+	} else {
+		over_boundary_point[1] = ey + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 Vector Box::over_neg_y_bound(const Vector & projected) const {
-	Vector over_boundary_point{projected[0], -1 * (ey + box_granularity_c), 0, 1};
+	Vector over_boundary_point{projected[0], 0, 0, 1};
+	if(projected_point[1] > -ey) {
+		over_boundary_point[1] = -ey - box_granularity_c;
+	} else {
+		over_boundary_point[1] = -ey + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 Vector Box::over_pos_x_bound(const Vector & projected) const {
-	Vector over_boundary_point{ex + box_granularity_c, projected[1], 0, 1};
+	Vector over_boundary_point{0, projected[1], 0, 1};
+	if(projected_point[0] > ex) {
+		over_boundary_point[0] = ex - box_granularity_c;
+	} else {
+		over_boundary_point[0] = ex + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 Vector Box::over_neg_x_bound(const Vector & projected) const {
-	Vector over_boundary_point{-1 * (ex + box_granularity_c), projected[1], 0, 1};
+	Vector over_boundary_point{0, projected[1], 0, 1};
+	if(projected_point[0] > -ex) {
+		over_boundary_point[0] = -ex - box_granularity_c;
+	} else {
+		over_boundary_point[0] = -ex + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 /*** CORNER POINTS ***/
 Vector Box::over_quadrant_one_corner(const Vector & projected) const {
-	Vector over_boundary_point{ex + box_granularity_c, ey + box_granularity_c, 0, 1};
+
+	Vector over_boundary_point{0, 0, 0, 1};
 	return get_transform() * over_boundary_point;
 }
 
@@ -132,9 +152,9 @@ Vector Box::over_quadrant_four_corner(const Vector & projected) const {
 
 
 Ground_box::Ground_box(KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
-					   ground_box_x_c, ground_box_y_c, ground_box_z_c, ground_box_theta_c,
-					   ground_box_ex_c, ground_box_ey_c, ground_box_ez_c) {}
+					   ground_box_x_c, ground_box_y_c, -ground_box_thickness_c / 2, ground_box_theta_c,
+					   ground_box_ex_c, ground_box_ey_c, ground_box_thickness_c / 2) {}
 
-General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal _z, dReal _theta, 
-						 dReal _ex, dReal _ey, dReal _ez) : Box(_kinbody, Vector(220/255, 220/255, 220/255),
-					   	 _x, _y, _z, _theta, _ex, _ey, _ez) {}
+General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, dReal _theta, 
+						 dReal _ex, dReal _ey) : Box(_kinbody, Vector(220/255, 220/255, 220/255),
+					   	 _x, _y, height / 2, _theta, _ex, _ey, height / 2) {}

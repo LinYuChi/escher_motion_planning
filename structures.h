@@ -59,6 +59,7 @@ class Box : public Structure {
 	// Box orientation
 	OpenRAVE::dReal theta;
 
+	// Box thickness
 	OpenRAVE::dReal ex;
 	OpenRAVE::dReal ey;
 	OpenRAVE::dReal ez;
@@ -107,8 +108,8 @@ public:
 class General_box : public Box {
 public:
 	General_box(OpenRAVE::KinBodyPtr _kinbody, OpenRAVE::dReal _x, OpenRAVE::dReal _y,
-				OpenRAVE::dReal _z, OpenRAVE::dReal _theta, OpenRAVE::dReal _ex,
-				OpenRAVE::dReal _ey, OpenRAVE::dReal _ez);
+				OpenRAVE::dReal height, OpenRAVE::dReal _theta, OpenRAVE::dReal _ex,
+				OpenRAVE::dReal _ey);
 };
 
 // class Trimesh_surface : public Structure {
