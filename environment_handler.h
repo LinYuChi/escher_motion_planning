@@ -15,7 +15,7 @@ class Environment_handler {
 	// double goal_y;
 	// double goal_z;
 
-	// get height of tallest surface encapsuling (x,y) point
+	// get height of tallest surface encapsulating (x,y) point
 	OpenRAVE::dReal highest_z(OpenRAVE::dReal x, OpenRAVE::dReal y);
 	// returns true if over_boundary_point is a "fake" boundary (e.g. adjacent structure is same height)
 	bool even_boundary_surface_height(const OpenRAVE::Vector& over_boundary_point, OpenRAVE::dReal z);

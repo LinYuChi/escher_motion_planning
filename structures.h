@@ -122,6 +122,7 @@ class Tri_mesh : public Structure {
 	OpenRAVE::dReal nz;
 
 	OpenRAVE::dReal c;
+	OpenRAVE::dReal circumscribed_radius;
 
 	// center coordinates
 	OpenRAVE::dReal xo;
@@ -139,6 +140,7 @@ public:
 	OpenRAVE::Vector get_center() const;
 	OpenRAVE::Transform get_transform() const;
 	OpenRAVE::Transform get_inverse_transform() const;
+	OpenRAVE::Transform projection_plan_frame(OpenRAVE::Vector point, OpenRAVE::Vector ray) const;
 	bool inside_polygon(OpenRAVE::Vector point) const;
 };
 

@@ -15,7 +15,7 @@ const double error_c = .001;
 
 /*** PRIVATE MEM FNS ***/
 
-// get height of tallest surface encapsuling (x,y) point
+// get height of tallest surface encapsulating (x,y) point
 dReal Environment_handler::highest_z(dReal x, dReal y) {
 	Vector point{x, y, 0, 1}; // reduce to 2 dimensions
 	double max_height = 0;

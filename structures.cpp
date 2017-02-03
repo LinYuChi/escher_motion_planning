@@ -244,6 +244,11 @@ Transform Tri_mesh::get_inverse_transform() const {
 	return transform_matrix.inverse();
 }
 
+Transform Tri_mesh::projection_plan_frame(Vector point, Vector ray) const {
+	return ;
+}
+
+
 bool Tri_mesh::inside_polygon(Vector point) const {
 	dReal x = point[0]; dReal y = point[1]; dReal z = point[2];
 
@@ -251,8 +256,10 @@ bool Tri_mesh::inside_polygon(Vector point) const {
 		return false;
 	}
 
-	// if (distance()) {
+	if (distance() >= circumscribed_radius) {
+		return false;
+	}
 
-	// }
-	return true;
+	projected_point = projection_plane_frame(point);
+	return inside_polygon_plane_frame(projected_point);
 }
