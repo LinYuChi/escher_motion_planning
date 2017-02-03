@@ -48,7 +48,7 @@ class Box : public Structure {
 	OpenRAVE::Vector color;
 
 	// Transformation matrix
-	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> rot_mat;
+	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
 
 
 	/// Box position
@@ -116,9 +116,30 @@ public:
 				OpenRAVE::dReal _ey);
 };
 
-// class Trimesh_surface : public Structure {
-// public:
-// 	Trimesh_surface(std::vector<OpenRAVE::dReal> plane_parameters, );
-// };
+class Tri_mesh : public Structure {
+	OpenRAVE::dReal nx;
+	OpenRAVE::dReal ny;
+	OpenRAVE::dReal nz;
+
+	OpenRAVE::dReal c;
+
+	// center coordinates
+	OpenRAVE::dReal xo;
+	OpenRAVE::dReal yo;
+	OpenRAVE::dReal zo;
+
+	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
+
+	// euclidean distance btwn two points in a 3D coordinate system
+	OpenRAVE::dReal distance(OpenRAVE::Vector q, OpenRAVE::Vector p) const;
+public:
+	Tri_mesh();
+	void transform_data(OpenRAVE::Transform transform);
+	OpenRAVE::Vector get_normal() const;
+	OpenRAVE::Vector get_center() const;
+	OpenRAVE::Transform get_transform() const;
+	OpenRAVE::Transform get_inverse_transform() const;
+	bool inside_polygon(OpenRAVE::Vector point) const;
+};
 
 #endif
