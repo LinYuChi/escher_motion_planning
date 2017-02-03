@@ -17,6 +17,12 @@ const dReal box_granularity_c = .01;
 
 int Structure::num_structures = 0;
 
+/*** PRIVATE MEM FNS ***/
+// given leg lengths, get hypotenuse length
+dReal Box::hypotenuse(dReal q, dReal p) const {
+	return sqrt(pow(q, 2) + pow(p, 2));
+}
+
 Box::Box(KinBodyPtr _kinbody, Vector _color, dReal _x, dReal _y, dReal _z, dReal _theta, 
 	dReal _ex, dReal _ey, dReal _ez) : Structure(_kinbody), color(_color),
 	x(_x), y(_y), z(_z), theta(_theta), ex(_ex), ey(_ey), ez(_ez) {
@@ -68,29 +74,28 @@ dReal Box::dist_from_neg_x_bound(const Vector & projected) const {
 	return abs(-ex - projected[0]);
 }
 
-
 /*** CORNER DISTANCES ***/
 dReal Box::dist_from_quadrant_one_corner(const Vector & projected) const {
-	return sqrt(pow(dist_from_pos_x_bound(projected), 2) + pow(dist_from_pos_y_bound(projected), 2));
+	return hypotenuse(dist_from_pos_x_bound(projected), dist_from_pos_y_bound(projected));
 }
 
 dReal Box::dist_from_quadrant_two_corner(const Vector & projected) const {
-	return sqrt(pow(dist_from_neg_x_bound(projected), 2) + pow(dist_from_pos_y_bound(projected), 2));
+	return hypotenuse(dist_from_neg_x_bound(projected), dist_from_pos_y_bound(projected));
 }
 
 dReal Box::dist_from_quadrant_three_corner(const Vector & projected) const {
-	return sqrt(pow(dist_from_neg_x_bound(projected), 2) + pow(dist_from_neg_y_bound(projected), 2));
+	return hypotenuse(dist_from_neg_x_bound(projected), dist_from_neg_y_bound(projected));
 }
 
 dReal Box::dist_from_quadrant_four_corner(const Vector & projected) const {
-	return sqrt(pow(dist_from_pos_x_bound(projected), 2) + pow(dist_from_neg_y_bound(projected), 2));
+	return hypotenuse(dist_from_pos_x_bound(projected), dist_from_neg_y_bound(projected));
 }
 
 
 /*** BOUNDARY POINTS ***/
 Vector Box::over_pos_y_bound(const Vector & projected) const {
 	Vector over_boundary_point{projected[0], 0, 0, 1};
-	if(projected_point[1] > ey) {
+	if(projected[1] > ey) {
 		over_boundary_point[1] = ey - box_granularity_c;
 	} else {
 		over_boundary_point[1] = ey + box_granularity_c;
@@ -100,7 +105,7 @@ Vector Box::over_pos_y_bound(const Vector & projected) const {
 
 Vector Box::over_neg_y_bound(const Vector & projected) const {
 	Vector over_boundary_point{projected[0], 0, 0, 1};
-	if(projected_point[1] > -ey) {
+	if(projected[1] > -ey) {
 		over_boundary_point[1] = -ey - box_granularity_c;
 	} else {
 		over_boundary_point[1] = -ey + box_granularity_c;
@@ -110,7 +115,7 @@ Vector Box::over_neg_y_bound(const Vector & projected) const {
 
 Vector Box::over_pos_x_bound(const Vector & projected) const {
 	Vector over_boundary_point{0, projected[1], 0, 1};
-	if(projected_point[0] > ex) {
+	if(projected[0] > ex) {
 		over_boundary_point[0] = ex - box_granularity_c;
 	} else {
 		over_boundary_point[0] = ex + box_granularity_c;
@@ -120,7 +125,7 @@ Vector Box::over_pos_x_bound(const Vector & projected) const {
 
 Vector Box::over_neg_x_bound(const Vector & projected) const {
 	Vector over_boundary_point{0, projected[1], 0, 1};
-	if(projected_point[0] > -ex) {
+	if(projected[0] > -ex) {
 		over_boundary_point[0] = -ex - box_granularity_c;
 	} else {
 		over_boundary_point[0] = -ex + box_granularity_c;
@@ -130,23 +135,62 @@ Vector Box::over_neg_x_bound(const Vector & projected) const {
 
 /*** CORNER POINTS ***/
 Vector Box::over_quadrant_one_corner(const Vector & projected) const {
-
 	Vector over_boundary_point{0, 0, 0, 1};
+	if(projected[0] > ex) {
+		over_boundary_point[0] = ex - box_granularity_c;
+	} else {
+		over_boundary_point[0] = ex + box_granularity_c;
+	}
+	if(projected[1] > ey) {
+		over_boundary_point[1] = ey - box_granularity_c;
+	} else {
+		over_boundary_point[1] = ey + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 Vector Box::over_quadrant_two_corner(const Vector & projected) const {
-	Vector over_boundary_point{-1 * (ex + box_granularity_c), ey + box_granularity_c, 0, 1};
+	Vector over_boundary_point{0, 0, 0, 1};
+	if(projected[0] > -ex) {
+		over_boundary_point[0] = -ex - box_granularity_c;
+	} else {
+		over_boundary_point[0] = -ex + box_granularity_c;
+	}
+	if(projected[1] > ey) {
+		over_boundary_point[1] = ey - box_granularity_c;
+	} else {
+		over_boundary_point[1] = ey + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 Vector Box::over_quadrant_three_corner(const Vector & projected) const {
-	Vector over_boundary_point{-1 * (ex + box_granularity_c), -1 * (ey + box_granularity_c), 0, 1};
+	Vector over_boundary_point{0, 0, 0, 1};
+	if(projected[0] > -ex) {
+		over_boundary_point[0] = -ex - box_granularity_c;
+	} else {
+		over_boundary_point[0] = -ex + box_granularity_c;
+	}
+	if(projected[1] > -ey) {
+		over_boundary_point[1] = -ey - box_granularity_c;
+	} else {
+		over_boundary_point[1] = -ey + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 
 Vector Box::over_quadrant_four_corner(const Vector & projected) const {
-	Vector over_boundary_point{ex + box_granularity_c, -1 * (ey + box_granularity_c), 0, 1};
+	Vector over_boundary_point{0, 0, 0, 1};
+	if(projected[0] > ex) {
+		over_boundary_point[0] = ex - box_granularity_c;
+	} else {
+		over_boundary_point[0] = ex + box_granularity_c;
+	}
+	if(projected[1] > -ey) {
+		over_boundary_point[1] = -ey - box_granularity_c;
+	} else {
+		over_boundary_point[1] = -ey + box_granularity_c;
+	}
 	return get_transform() * over_boundary_point;
 }
 

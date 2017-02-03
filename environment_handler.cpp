@@ -31,7 +31,7 @@ dReal Environment_handler::highest_z(dReal x, dReal y) {
 
 // returns true if over_boundary_point is a "fake" boundary (e.g. adjacent structure is same height)
 bool Environment_handler::even_boundary_surface_height(const Vector& over_boundary_point, dReal z) {
-	return z == highest_z(over_boundary_point[0], over_boundary_point[0]);
+	return z == highest_z(over_boundary_point[0], over_boundary_point[1]);
 }
 
 
@@ -117,7 +117,6 @@ double Environment_handler::dist_to_boundary(dReal x, dReal y, dReal z) {
 		// possible use case: point is not perpendicular to any of surface's boundaries
 
 		if(structure->dist_from_quadrant_one_corner(projected_point) < nearest_boundary_dist) {
-			cout << "winner! " << endl;
 			Vector over_boundary_point = structure->over_quadrant_one_corner(projected_point);
 			cout << over_boundary_point << endl;
 			if(!even_boundary_surface_height(over_boundary_point, z)) {

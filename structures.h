@@ -63,6 +63,10 @@ class Box : public Structure {
 	OpenRAVE::dReal ex;
 	OpenRAVE::dReal ey;
 	OpenRAVE::dReal ez;
+
+	// euclidean distance
+	// given leg lengths, get hypotenuse length
+	OpenRAVE::dReal hypotenuse(OpenRAVE::dReal q, OpenRAVE::dReal p) const;	
 public:
 	Box(OpenRAVE::KinBodyPtr _kinbody,
 		OpenRAVE::Vector _color, OpenRAVE::dReal _x, OpenRAVE::dReal _y, 
