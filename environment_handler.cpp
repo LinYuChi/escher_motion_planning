@@ -46,10 +46,13 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 		penv->Remove(structure->get_kinbody());
 	}
 
-	unique_ptr<Structure> wall (new General_box{RaveCreateKinBody(penv), -2, -3, .3, 0, 1, 1});
-	// unique_ptr<Structure> ground (new Ground_box{RaveCreateKinBody(penv)});
-	structures.push_back(move(wall));
-	// structures.push_back(move(ground));
+	unique_ptr<Structure> ground (new Ground_box{RaveCreateKinBody(penv)});
+	unique_ptr<Structure> b1 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
+	unique_ptr<Structure> b2 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
+
+	structures.push_back(move(b1));
+	structures.push_back(move(b2));
+	structures.push_back(move(ground));
 
 	for(unique_ptr<Structure> & structure : structures) {
 		structure->get_kinbody()->InitFromBoxes(structure->get_parameter(), true);

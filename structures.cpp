@@ -202,7 +202,7 @@ Ground_box::Ground_box(KinBodyPtr _kinbody) : Box(_kinbody, ground_box_color_c,
 					   ground_box_ex_c, ground_box_ey_c, ground_box_thickness_c / 2) {}
 
 General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, dReal _theta, 
-						 dReal _ex, dReal _ey) : Box(_kinbody, Vector(220/255, 220/255, 220/255),
+						 dReal _ex, dReal _ey) : Box(_kinbody, Vector(),
 					   	 _x, _y, height / 2, _theta, _ex, _ey, height / 2) {}
 
 
@@ -211,11 +211,39 @@ General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, 
 
 /*** PRIVATE MEM FNS ***/
 
-OpenRAVE::dReal Tri_mesh::distance(OpenRAVE::Vector q, OpenRAVE::Vector p) const {
+dReal Tri_mesh::distance(Vector q, Vector p) const {
 	return sqrt(pow(q[0] - p[0], 2) + pow(q[1] - p[1], 2) + pow(q[2] - p[2], 2));
 }
 
+void Tri_mesh::set_center() const {
+	circumradius = 0;
+	for(int i = 0; i < vertices.size() - 1; ++i) {
+		for(int j = i + 1; j < vertices.size(); ++j) {
+			dReal dist = distance(vertices[i], vertices[j]);
+			if(dist / 2 > circumradius) {
+				circumradius = dist / 2;
+				xo = (vertices[i][0] + vertices[j][0]) / 2;
+				yo = (vertices[i][1] + vertices[j][1]) / 2;
+				zo = (vertices[i][2] + vertices[j][2]) / 2;
+			}
+		}
+	}
+}
+
 /*** PUBLIC MEM FNS ***/
+
+Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
+				   RaveVector<RaveVector<dReal> > _boundaries,
+				   RaveVector<RaveVector<dReal> > _vertices) : Structure(_kinbody),
+				   boundaries(_boundaries), vertices(_vertices) {
+	dReal coefficient_norm = distance(plane_parameters, Vector{0, 0, 0});
+	nx = plane_parameters[0] / coefficient_norm;
+	ny = plane_parameters[1] / coefficient_norm;
+	nz = plane_parameters[2] / coefficient_norm;
+
+	set_center();
+}
+
 
 void Tri_mesh::transform_data(OpenRAVE::Transform transform) {
 	Vector transformed_normal = transform * get_normal();
@@ -244,9 +272,9 @@ Transform Tri_mesh::get_inverse_transform() const {
 	return transform_matrix.inverse();
 }
 
-Transform Tri_mesh::projection_plan_frame(Vector point, Vector ray) const {
-	return ;
-}
+// Transform Tri_mesh::projection_plan_frame(Vector point, Vector ray) const {
+// 	return ;
+// }
 
 
 bool Tri_mesh::inside_polygon(Vector point) const {
@@ -256,10 +284,10 @@ bool Tri_mesh::inside_polygon(Vector point) const {
 		return false;
 	}
 
-	if (distance() >= circumscribed_radius) {
+	if (distance(point, Vector{xo, yo, zo}) >= circumscribed_radius) {
 		return false;
 	}
 
-	projected_point = projection_plane_frame(point);
+	Vector projected_point = projection_plane_frame(point);
 	return inside_polygon_plane_frame(projected_point);
 }

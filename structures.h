@@ -129,12 +129,20 @@ class Tri_mesh : public Structure {
 	OpenRAVE::dReal yo;
 	OpenRAVE::dReal zo;
 
+	OpenRAVE::dReal circumradius;
+
 	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
+	OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > boundaries;
+	OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > vertices;
+
 
 	// euclidean distance btwn two points in a 3D coordinate system
 	OpenRAVE::dReal distance(OpenRAVE::Vector q, OpenRAVE::Vector p) const;
+	void set_center() const;
 public:
-	Tri_mesh();
+	Tri_mesh(OpenRAVE::KinBodyPtr _kinbody, OpenRAVE::Vector plane_parameters,
+			 OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > _boundaries,
+			 OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > _vertices);
 	void transform_data(OpenRAVE::Transform transform);
 	OpenRAVE::Vector get_normal() const;
 	OpenRAVE::Vector get_center() const;
