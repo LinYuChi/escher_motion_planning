@@ -1,9 +1,11 @@
 #include "structures.h"
 #include <cmath>
+#include <limits>
 
 using namespace OpenRAVE;
-using std::vector;
-using std::abs; using std::min; using std::sqrt;
+using std::vector; using std::pair;
+using std::abs; using std::min; using std::max; using std::sqrt;
+using std::numeric_limits;
 
 const dReal ground_box_x_c = 2.5;
 const dReal ground_box_y_c = 0;
@@ -102,7 +104,7 @@ Vector Box::over_pos_y_bound(const Vector & projected) const {
 	} else {
 		over_boundary_point[1] = ey + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 Vector Box::over_neg_y_bound(const Vector & projected) const {
@@ -112,7 +114,7 @@ Vector Box::over_neg_y_bound(const Vector & projected) const {
 	} else {
 		over_boundary_point[1] = -ey + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 Vector Box::over_pos_x_bound(const Vector & projected) const {
@@ -122,7 +124,7 @@ Vector Box::over_pos_x_bound(const Vector & projected) const {
 	} else {
 		over_boundary_point[0] = ex + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 Vector Box::over_neg_x_bound(const Vector & projected) const {
@@ -132,7 +134,7 @@ Vector Box::over_neg_x_bound(const Vector & projected) const {
 	} else {
 		over_boundary_point[0] = -ex + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 /*** CORNER POINTS ***/
@@ -148,7 +150,7 @@ Vector Box::over_quadrant_one_corner(const Vector & projected) const {
 	} else {
 		over_boundary_point[1] = ey + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 Vector Box::over_quadrant_two_corner(const Vector & projected) const {
@@ -163,7 +165,7 @@ Vector Box::over_quadrant_two_corner(const Vector & projected) const {
 	} else {
 		over_boundary_point[1] = ey + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 Vector Box::over_quadrant_three_corner(const Vector & projected) const {
@@ -178,7 +180,7 @@ Vector Box::over_quadrant_three_corner(const Vector & projected) const {
 	} else {
 		over_boundary_point[1] = -ey + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 Vector Box::over_quadrant_four_corner(const Vector & projected) const {
@@ -193,7 +195,7 @@ Vector Box::over_quadrant_four_corner(const Vector & projected) const {
 	} else {
 		over_boundary_point[1] = -ey + box_granularity_c;
 	}
-	return get_transform() * over_boundary_point;
+	return transform_matrix * over_boundary_point;
 }
 
 
@@ -215,7 +217,7 @@ dReal Tri_mesh::distance(Vector q, Vector p) const {
 	return sqrt(pow(q[0] - p[0], 2) + pow(q[1] - p[1], 2) + pow(q[2] - p[2], 2));
 }
 
-void Tri_mesh::set_center() const {
+void Tri_mesh::update_center() {
 	circumradius = 0;
 	for(int i = 0; i < vertices.size() - 1; ++i) {
 		for(int j = i + 1; j < vertices.size(); ++j) {
@@ -230,30 +232,73 @@ void Tri_mesh::set_center() const {
 	}
 }
 
+void Tri_mesh::update_proj_vertices() {
+	min_proj_x = numeric_limits<dReal>::max();
+	max_proj_x = numeric_limits<dReal>::min();
+
+	min_proj_y = numeric_limits<dReal>::max();
+	max_proj_y = numeric_limits<dReal>::min();
+
+	for(Vector const & vertex : vertices) {
+		Vector proj_vertex = projection_plane_frame(vertex);
+		proj_vertices.push_back(proj_vertex);
+		
+		min_proj_x = min(min_proj_x, proj_vertex.x);
+		max_proj_x = max(max_proj_x, proj_vertex.x);
+
+		min_proj_y = min(min_proj_y, proj_vertex.y);
+		max_proj_y = max(max_proj_y, proj_vertex.y);
+	}
+}
+
 /*** PUBLIC MEM FNS ***/
 
 Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
-				   RaveVector<RaveVector<dReal> > _boundaries,
-				   RaveVector<RaveVector<dReal> > _vertices) : Structure(_kinbody),
-				   boundaries(_boundaries), vertices(_vertices) {
-	dReal coefficient_norm = distance(plane_parameters, Vector{0, 0, 0});
-	nx = plane_parameters[0] / coefficient_norm;
-	ny = plane_parameters[1] / coefficient_norm;
-	nz = plane_parameters[2] / coefficient_norm;
+				   vector<pair<int, int> > _edges, vector<Vector> _vertices) :
+				   Structure(_kinbody), edges(_edges), vertices(_vertices) {
 
-	set_center();
+	plane_parameters.normalize();
+	nx = plane_parameters[0];
+	ny = plane_parameters[1];
+	nz = plane_parameters[2];
+	c = plane_parameters[3];
+
+	update_center();
+
+	Vector xv{vertices[0][0] - xo, vertices[0][1] - yo, vertices[0][2] - zo};
+	xv.normalize();
+	Vector yv = get_normal().cross(xv); // double check this?
+	Vector zv = get_normal();
+
+	transform_matrix.rotfrommat(xv[0], xv[1], xv[2], yv[0], yv[1], yv[2], zv[0], zv[1], zv[2]);
+	transform_matrix.trans = get_center();
+	inverse_transform_matrix = transform_matrix.inverse();
+
+	update_proj_vertices();
 }
 
 
 void Tri_mesh::transform_data(OpenRAVE::Transform transform) {
+	transform_matrix = transform_matrix * transform;
+	inverse_transform_matrix = inverse_transform_matrix * transform.inverse();
+
 	Vector transformed_normal = transform * get_normal();
-	nx = transformed_normal[0];
-	ny = transformed_normal[1];
-	nz = transformed_normal[2];
+	nx = transformed_normal.x;
+	ny = transformed_normal.y;
+	nz = transformed_normal.z;
 
-	// vertices transformation here
+	Vector transformed_center = transform * get_center();
+	xo = transformed_center.x;
+	yo = transformed_center.y;
+	zo = transformed_center.z;
 
-	// c assignment
+	c = -nx * vertices[0].x - ny * vertices[0].y - nz * vertices[0].z;
+
+	for(int i = 0; i < vertices.size(); ++i) {
+		vertices[i] = transform * vertices[i];
+	}
+
+	update_proj_vertices();
 }
 
 Vector Tri_mesh::get_normal() const {
@@ -269,25 +314,29 @@ Transform Tri_mesh::get_transform() const {
 }
 
 Transform Tri_mesh::get_inverse_transform() const {
-	return transform_matrix.inverse();
+	return inverse_transform_matrix;
 }
 
-// Transform Tri_mesh::projection_plan_frame(Vector point, Vector ray) const {
-// 	return ;
-// }
+// returns 2D point projected in plane frame. This assumes the "ray" is the surface normal.
+Vector Tri_mesh::projection_plane_frame(const Vector & point) const {
+	Vector proj_point = inverse_transform_matrix * point;
+	proj_point.z = 0; // flatten point
+	return proj_point;
+}
 
 
-bool Tri_mesh::inside_polygon(Vector point) const {
+bool Tri_mesh::inside_polygon(const Vector & point) const {
 	dReal x = point[0]; dReal y = point[1]; dReal z = point[2];
 
 	if(abs(nx * x + ny * y + nz * z + c) > error_tolerance_c) {
 		return false;
 	}
 
-	if (distance(point, Vector{xo, yo, zo}) >= circumscribed_radius) {
+	if (distance(point, Vector{xo, yo, zo}) >= circumradius) {
 		return false;
 	}
 
 	Vector projected_point = projection_plane_frame(point);
-	return inside_polygon_plane_frame(projected_point);
+	// return inside_polygon_plane_frame(projected_point);
+	return true;
 }

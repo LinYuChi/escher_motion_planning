@@ -4,6 +4,7 @@
 #include <openrave/plugin.h>
 #include <string>
 #include <vector>
+#include <utility>
 
 class Structure {
 	static int num_structures;
@@ -117,12 +118,23 @@ public:
 };
 
 class Tri_mesh : public Structure {
+	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
+	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> inverse_transform_matrix;
+	std::vector<std::pair<int, int> > edges; // contains indices into vertices vector
+	std::vector<OpenRAVE::Vector> vertices;
+	std::vector<OpenRAVE::Vector> proj_vertices; // last vertex is same as first vertex, i.e. "closed loop"
+
+	OpenRAVE::dReal min_proj_x;
+	OpenRAVE::dReal max_proj_x;
+
+	OpenRAVE::dReal min_proj_y;
+	OpenRAVE::dReal max_proj_y;
+
+	// nx * xo + ny * yo + nz * zo + c = 0
 	OpenRAVE::dReal nx;
 	OpenRAVE::dReal ny;
 	OpenRAVE::dReal nz;
-
 	OpenRAVE::dReal c;
-	OpenRAVE::dReal circumscribed_radius;
 
 	// center coordinates
 	OpenRAVE::dReal xo;
@@ -131,25 +143,23 @@ class Tri_mesh : public Structure {
 
 	OpenRAVE::dReal circumradius;
 
-	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
-	OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > boundaries;
-	OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > vertices;
-
-
 	// euclidean distance btwn two points in a 3D coordinate system
 	OpenRAVE::dReal distance(OpenRAVE::Vector q, OpenRAVE::Vector p) const;
-	void set_center() const;
+	void update_center();
+	void update_proj_vertices();
 public:
 	Tri_mesh(OpenRAVE::KinBodyPtr _kinbody, OpenRAVE::Vector plane_parameters,
-			 OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > _boundaries,
-			 OpenRAVE::RaveVector<OpenRAVE::RaveVector<OpenRAVE::dReal> > _vertices);
+			 std::vector<std::pair<int, int> > _edges,
+			 std::vector<OpenRAVE::Vector> _vertices);
 	void transform_data(OpenRAVE::Transform transform);
 	OpenRAVE::Vector get_normal() const;
 	OpenRAVE::Vector get_center() const;
 	OpenRAVE::Transform get_transform() const;
 	OpenRAVE::Transform get_inverse_transform() const;
-	OpenRAVE::Transform projection_plan_frame(OpenRAVE::Vector point, OpenRAVE::Vector ray) const;
-	bool inside_polygon(OpenRAVE::Vector point) const;
+
+	// returns 2D point projected in plane frame. This assumes the "ray" is the surface normal.
+	OpenRAVE::Vector projection_plane_frame(const OpenRAVE::Vector & point) const;
+	bool inside_polygon(const OpenRAVE::Vector & point) const;
 };
 
 #endif
