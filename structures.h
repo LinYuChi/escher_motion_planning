@@ -66,7 +66,6 @@ class Box : public Structure {
 	OpenRAVE::dReal ey;
 	OpenRAVE::dReal ez;
 
-	// euclidean distance
 	// given leg lengths, get hypotenuse length
 	OpenRAVE::dReal hypotenuse(OpenRAVE::dReal q, OpenRAVE::dReal p) const;	
 public:
@@ -145,8 +144,10 @@ class Tri_mesh : public Structure {
 
 	OpenRAVE::dReal circumradius;
 
+	// euclidean distance btwn two points in a 2D coordinate system
+	OpenRAVE::dReal euclidean_distance_2d(const OpenRAVE::Vector & q, const OpenRAVE::Vector & p) const;
 	// euclidean distance btwn two points in a 3D coordinate system
-	OpenRAVE::dReal euclidean_distance(OpenRAVE::Vector q, OpenRAVE::Vector p) const;
+	OpenRAVE::dReal euclidean_distance_3d(const OpenRAVE::Vector & q, const OpenRAVE::Vector & p) const;
 	void update_center();
 	void update_proj_vertices();
 	void update_approx_boundary();
@@ -162,8 +163,19 @@ public:
 
 	// returns 2D point projected in plane frame. This assumes the "ray" is the surface normal.
 	OpenRAVE::Vector projection_plane_frame(const OpenRAVE::Vector & point) const;
+	// returns 3D point projected in plane frame. Ray is a 3D unit vector.
+	OpenRAVE::Vector projection_global_frame(const OpenRAVE::Vector & point, const OpenRAVE::Vector & ray) const;
 	bool inside_polygon(const OpenRAVE::Vector & point) const;
 	bool inside_polygon_plane_frame(const OpenRAVE::Vector & projected_point) const;
+
+	// polygon must be convex
+	bool contact_inside_polygon(const OpenRAVE::Transform & tf, const std::string & contact_type) const;
+
+	OpenRAVE::Transform projection(const OpenRAVE::Vector & origin, const OpenRAVE::Vector & ray, OpenRAVE::dReal roll,
+								   const std::string & end_effector_type, bool valid_contact) const;
+
+	// extract binary checking into another fn
+	dReal dist_to_boundary(OpenRAVE::Vector point, OpenRAVE::dReal search_radius = 999/*, bool binary_checking = false*/) const;
 };
 
 #endif

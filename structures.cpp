@@ -3,11 +3,12 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
+#include <numeric>
 
 using namespace OpenRAVE;
 using std::vector; using std::pair; using std::map;
 using std::abs; using std::sqrt;
-using std::numeric_limits;
+using std::numeric_limits; using std::iota;
 using std::swap; using std::min; using std::max;
 using std::distance;
 
@@ -22,7 +23,12 @@ const Vector ground_box_color_c = Vector(120.0/255, 120.0/255, 120.0/255);
 const dReal box_granularity_c = .01;
 const dReal error_tolerance_c = .005;
 const dReal surface_slice_resolution_c = .005;
+const dReal cos_error_c = .001;
 
+const dReal foot_h_c = 0.25;
+const dReal foot_h_w = 0.135;
+const dReal hand_h_c = 0.20;
+const dReal hand_h_w = 0.14;
 
 int Structure::num_structures = 0;
 
@@ -217,15 +223,22 @@ General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, 
 
 /*** PRIVATE MEM FNS ***/
 
-dReal Tri_mesh::euclidean_distance(Vector q, Vector p) const {
-	return sqrt(pow(q[0] - p[0], 2) + pow(q[1] - p[1], 2) + pow(q[2] - p[2], 2));
+
+// euclidean distance btwn two points in a 2D coordinate system
+dReal Tri_mesh::euclidean_distance_2d(const Vector & q, const Vector & p) const {
+	return sqrt(pow(q.x - p.x, 2) + pow(q.y - p.y, 2));
+}
+
+// euclidean distance btwn two points in a 3D coordinate system
+dReal Tri_mesh::euclidean_distance_3d(const Vector & q, const Vector & p) const {
+	return sqrt(pow(q.x - p.x, 2) + pow(q.y - p.y, 2) + pow(q.z - p.z, 2));
 }
 
 void Tri_mesh::update_center() {
 	circumradius = 0;
 	for(int i = 0; i < vertices.size() - 1; ++i) {
 		for(int j = i + 1; j < vertices.size(); ++j) {
-			dReal dist = euclidean_distance(vertices[i], vertices[j]);
+			dReal dist = euclidean_distance_3d(vertices[i], vertices[j]);
 			if(dist / 2 > circumradius) {
 				circumradius = dist / 2;
 				xo = (vertices[i][0] + vertices[j][0]) / 2;
@@ -366,6 +379,12 @@ Vector Tri_mesh::projection_plane_frame(const Vector & point) const {
 	return proj_point;
 }
 
+Vector Tri_mesh::projection_global_frame(const Vector & projected_point, const Vector & ray) const {
+	Vector cosine = get_normal() * ray;
+	dReal t = -c - (get_normal() * projected_point).x / cosine; // double check asserts
+	Vector p = projected_point + t * ray;
+	return p;
+}
 
 bool Tri_mesh::inside_polygon(const Vector & point) const {
 	dReal x = point[0]; dReal y = point[1]; dReal z = point[2];
@@ -374,7 +393,7 @@ bool Tri_mesh::inside_polygon(const Vector & point) const {
 		return false;
 	}
 
-	if (euclidean_distance(point, get_center()) >= circumradius) {
+	if (euclidean_distance_3d(point, get_center()) >= circumradius) {
 		return false;
 	}
 
@@ -401,3 +420,104 @@ bool Tri_mesh::inside_polygon_plane_frame(const Vector & projected_point) const 
 	auto bound_it = lower_bound(y_bounds_it->second.begin(), y_bounds_it->second.end(), projected_point.y);
 	return distance(bound_it, y_bounds_it->second.begin()) % 2 == 1;
 }
+
+// polygon must be convex
+bool Tri_mesh::contact_inside_polygon(const Vector & tf, const string & contact_type) const {
+	dReal h;
+	dReal w;
+	Transform contact_vertices;
+
+	if(contact_type == "foot") {
+		h = foot_h_c / 2;
+		w = foot_w_c / 2;
+		contact_vertices.rotfrommat(h, h, h, w, -w, w, 0, 0, 0, 1, 1, 1);
+		contact_vertices.trans = Vector{-h, -w, 0, 1};
+	} else if(contact_type == "hand") {
+		h = hand_h_c / 2;
+		w = hand_w_c / 2;
+		contact_vertices.rotfrommat(0, 0, 0, h, h, -h, w, -w, w, 1, 1, 1);
+		contact_vertices.trans = Vector{0, -h, -w, 1};
+	} else {
+		// unexpected contact.
+		// add exceptions to code? -> slight performance decrease.
+		return false;
+	}
+
+	tf_vertices = tf * contact_vertices;
+	// call inside polygon
+	return true;
+}
+
+Transform Tri_mesh::projection(const Vector & origin, const Vector & ray, dReal roll, const string & end_effector_type,
+							   bool valid_contact) const {
+
+	Vector translation = projection_global_frame(origin, ray);
+
+	Vector cx, cy, cz;
+
+	if(end_effector_type == "foot") {
+		cz = get_normal();
+		cx = Vector{cos(roll * std::M_PI / 180, std::sin(roll * std::M_PI / 180), 0)};
+		cy = cz.cross(cz).normalize();
+		cx = cy.cross(cy);
+	}
+
+	Transform ret_transform;
+	ret_transform.rotfrommat(cx.x, cx.y, cx.z, cy.x, cy.y. cy.z, cz.x, cz.y. cz.z);
+	ret_transform.trans = translation;
+	return 
+}
+
+// extract binary checking into another function
+dReal Tri_mesh::dist_to_boundary(Vector point, dReal search_radius = 999/*, bool binary_checking = false*/) const {
+	Vector proj_p = projection_plane_frame(point);
+	dReal dist = search_radius; // assume point is inside boundaries
+
+	int upper_x = min(ceil((point.x + search_radius - self.min_proj_x) / surface_slice_resolution_c ), boundaries.size());
+	int middle_x = (point.x - self.min_proj_x) / surface_slice_resolution_c;
+	int lower_x = max((point.x - search_radius-self.min_proj_x) / surface_slice_resolution_c, 0);
+
+	int half_interval_x = min(upper_x - middle_x, middle_x - lower_x);
+
+	if((boundaries.size() - 1 - middle_x) * surface_slice_resolution_c < dist) {
+		dist = (boundaries.size() - 1 - middle_x) * surface_slice_resolution_c;
+		// if(binary_checking) return false;
+	}
+
+	if(middle_x * surface_slice_resolution_c < dist) {
+		dist = middle_x * surface_slice_resolution_c;
+		// if(binary_checking) return false;
+	}
+
+	vector x_slices(2 * half_interval_x);
+	std::iota(x_slices.begin(), x_slices.end(), middle_x - half_interval_x);
+
+	sort(x_slices.begin(), x_slices.end(), [&point](int a, int b) {
+		return abs(surface_slice_resolution_c * a + min_proj_x - point.x) <
+				abs(surface_slice_resolution_c * b + min_proj_x - point.x);
+	});
+
+	for(dReal ix : x_slices) {
+		y_bounds = boundaries.at(ix);
+		dReal x_coord = surface_slice_resolution_c * ix + min_proj_x;
+
+		if(abs(x_coord - point.x) > dist) {
+			continue;
+		}
+
+		for(int i = 0; i < y_bounds.size() - 1; ++i) {
+			dReal y_bound = y_bounds[i];
+			dReal next_y_bound = y_bounds[i + 1];
+			dReal dist_to_slice_bound = min(euclidean_distance_2d(Vector{x, y_bound}, point), euclidean_distance_2d(Vector{x, next_y_bound}, point));
+
+			if(dist_to_slice_bound < dist) {
+				dist = dist_to_slice_bound;
+				// if(binary_checking) return false;
+			}
+		}
+	}
+
+	// if(binary_checking) return true;
+	return dist;
+}
+
