@@ -1,11 +1,15 @@
 #include "structures.h"
 #include <cmath>
 #include <limits>
+#include <algorithm>
+#include <iterator>
 
 using namespace OpenRAVE;
-using std::vector; using std::pair;
-using std::abs; using std::min; using std::max; using std::sqrt;
+using std::vector; using std::pair; using std::map;
+using std::abs; using std::sqrt;
 using std::numeric_limits;
+using std::swap; using std::min; using std::max;
+using std::distance;
 
 const dReal ground_box_x_c = 2.5;
 const dReal ground_box_y_c = 0;
@@ -17,6 +21,7 @@ const Vector ground_box_color_c = Vector(120.0/255, 120.0/255, 120.0/255);
 
 const dReal box_granularity_c = .01;
 const dReal error_tolerance_c = .005;
+const dReal surface_slice_resolution_c = .005;
 
 
 int Structure::num_structures = 0;
@@ -208,7 +213,6 @@ General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, 
 					   	 _x, _y, height / 2, _theta, _ex, _ey, height / 2) {}
 
 
-
 /*** TRIANGULAR MESH ***/
 
 /*** PRIVATE MEM FNS ***/
@@ -248,6 +252,44 @@ void Tri_mesh::update_proj_vertices() {
 
 		min_proj_y = min(min_proj_y, proj_vertex.y);
 		max_proj_y = max(max_proj_y, proj_vertex.y);
+	}
+
+	if(proj_vertices.size()) { 
+		proj_vertices.push_back(proj_vertices[0]); // "close the loop"
+	}
+}
+
+void Tri_mesh::update_approx_boundary() {
+	for(pair<int, int> edge : edges) {
+		dReal start_x = edge.first.x;
+		dReal start_y = edge.first.y;
+		dReal end_x = edge.second.x;
+		dReal end_y = edge.second.y;
+
+		if(start_x == end_x) continue;
+
+		if(start_x > end_x) {
+			swap(start_x, end_x);
+			swap(start_y, end_y);
+		}
+
+		int start_x_key = ceil((start_x - min_proj_x) / surface_slice_resolution_c);
+		int end_x_key = (end_x - min_proj_x) / surface_slice_resolution_c;
+
+		for(int i = start_x_key; i <= end_x_key; ++i) {
+			dReal x_coord = i * surface_slice_resolution_c + min_proj_x;
+			dReal y_coord = y_start + (x - x_start) / (x_end - x_start) * (y_end - y_start);
+			if(boundaries.find(i) != boundaries.end()) {
+				boundaries[i].push_back(y_coord);
+			} else {
+				boundaries[i] = {y_coord};
+			}
+		}
+
+		// sort all y boundary points
+		for(auto & boundary_pair : boundaries) {
+			sort(boundary_pair.second.begin(), boundary_pair.second.end());
+		}
 	}
 }
 
@@ -292,7 +334,7 @@ void Tri_mesh::transform_data(OpenRAVE::Transform transform) {
 	yo = transformed_center.y;
 	zo = transformed_center.z;
 
-	c = -nx * vertices[0].x - ny * vertices[0].y - nz * vertices[0].z;
+	c = -(nx * vertices[0].x + ny * vertices[0].y + nz * vertices[0].z);
 
 	for(int i = 0; i < vertices.size(); ++i) {
 		vertices[i] = transform * vertices[i];
@@ -332,11 +374,30 @@ bool Tri_mesh::inside_polygon(const Vector & point) const {
 		return false;
 	}
 
-	if (distance(point, Vector{xo, yo, zo}) >= circumradius) {
+	if (distance(point, get_center()) >= circumradius) {
 		return false;
 	}
 
 	Vector projected_point = projection_plane_frame(point);
-	// return inside_polygon_plane_frame(projected_point);
-	return true;
+	return inside_polygon_plane_frame(projected_point);
+}
+
+bool Tri_mesh::inside_polygon_plane_frame(const Vector & projected_point) const {
+	if(projected_point.x > max_proj_x || projected_point.x < min_proj_x || 
+	   projected_point.y > max_proj_y || projected_point.y < min_proj_y) {
+		return false;
+	}
+
+	int query_x = (projected_point.x - min_proj_x) / surface_slice_resolution_c;
+	auto y_bounds_it = boundaries.find(query_x);
+
+	if(it == boundaries.end()) {
+		return false;
+	}
+
+	int pass_boundary_count = 0;
+
+	// considers points "on border" to be within the frame
+	auto bound_it = lower_bound(y_bounds_it->begin(), y_bounds_it->end(), projected_point.y);
+	return distance(bound_it, y_bounds_it->begin()) % 2 == 1;
 }

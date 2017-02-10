@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
 
 class Structure {
 	static int num_structures;
@@ -118,6 +119,7 @@ public:
 };
 
 class Tri_mesh : public Structure {
+	std::map<OpenRAVE::dReal, std::vector<OpenRAVE::dReal> > boundaries; // discretized mapping from x coord to y bounds
 	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
 	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> inverse_transform_matrix;
 	std::vector<std::pair<int, int> > edges; // contains indices into vertices vector
@@ -147,6 +149,7 @@ class Tri_mesh : public Structure {
 	OpenRAVE::dReal distance(OpenRAVE::Vector q, OpenRAVE::Vector p) const;
 	void update_center();
 	void update_proj_vertices();
+	void update_approx_boundary();
 public:
 	Tri_mesh(OpenRAVE::KinBodyPtr _kinbody, OpenRAVE::Vector plane_parameters,
 			 std::vector<std::pair<int, int> > _edges,
@@ -160,6 +163,7 @@ public:
 	// returns 2D point projected in plane frame. This assumes the "ray" is the surface normal.
 	OpenRAVE::Vector projection_plane_frame(const OpenRAVE::Vector & point) const;
 	bool inside_polygon(const OpenRAVE::Vector & point) const;
+	bool inside_polygon_plane_frame(const OpenRAVE::Vector & projected_point) const;
 };
 
 #endif
