@@ -217,7 +217,7 @@ General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, 
 
 /*** PRIVATE MEM FNS ***/
 
-dReal Tri_mesh::distance(Vector q, Vector p) const {
+dReal Tri_mesh::euclidean_distance(Vector q, Vector p) const {
 	return sqrt(pow(q[0] - p[0], 2) + pow(q[1] - p[1], 2) + pow(q[2] - p[2], 2));
 }
 
@@ -225,7 +225,7 @@ void Tri_mesh::update_center() {
 	circumradius = 0;
 	for(int i = 0; i < vertices.size() - 1; ++i) {
 		for(int j = i + 1; j < vertices.size(); ++j) {
-			dReal dist = distance(vertices[i], vertices[j]);
+			dReal dist = euclidean_distance(vertices[i], vertices[j]);
 			if(dist / 2 > circumradius) {
 				circumradius = dist / 2;
 				xo = (vertices[i][0] + vertices[j][0]) / 2;
@@ -261,10 +261,10 @@ void Tri_mesh::update_proj_vertices() {
 
 void Tri_mesh::update_approx_boundary() {
 	for(pair<int, int> edge : edges) {
-		dReal start_x = edge.first.x;
-		dReal start_y = edge.first.y;
-		dReal end_x = edge.second.x;
-		dReal end_y = edge.second.y;
+		dReal start_x = proj_vertices[edge.first].x;
+		dReal start_y = proj_vertices[edge.first].y;
+		dReal end_x = proj_vertices[edge.second].x;
+		dReal end_y = proj_vertices[edge.second].y;
 
 		if(start_x == end_x) continue;
 
@@ -278,7 +278,7 @@ void Tri_mesh::update_approx_boundary() {
 
 		for(int i = start_x_key; i <= end_x_key; ++i) {
 			dReal x_coord = i * surface_slice_resolution_c + min_proj_x;
-			dReal y_coord = y_start + (x - x_start) / (x_end - x_start) * (y_end - y_start);
+			dReal y_coord = start_y + (x_coord - start_x) / (end_x - start_x) * (end_y - start_y);
 			if(boundaries.find(i) != boundaries.end()) {
 				boundaries[i].push_back(y_coord);
 			} else {
@@ -374,7 +374,7 @@ bool Tri_mesh::inside_polygon(const Vector & point) const {
 		return false;
 	}
 
-	if (distance(point, get_center()) >= circumradius) {
+	if (euclidean_distance(point, get_center()) >= circumradius) {
 		return false;
 	}
 
@@ -391,13 +391,13 @@ bool Tri_mesh::inside_polygon_plane_frame(const Vector & projected_point) const 
 	int query_x = (projected_point.x - min_proj_x) / surface_slice_resolution_c;
 	auto y_bounds_it = boundaries.find(query_x);
 
-	if(it == boundaries.end()) {
+	if(y_bounds_it == boundaries.end()) {
 		return false;
 	}
 
 	int pass_boundary_count = 0;
 
 	// considers points "on border" to be within the frame
-	auto bound_it = lower_bound(y_bounds_it->begin(), y_bounds_it->end(), projected_point.y);
-	return distance(bound_it, y_bounds_it->begin()) % 2 == 1;
+	auto bound_it = lower_bound(y_bounds_it->second.begin(), y_bounds_it->second.end(), projected_point.y);
+	return distance(bound_it, y_bounds_it->second.begin()) % 2 == 1;
 }
