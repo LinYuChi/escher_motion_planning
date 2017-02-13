@@ -4,9 +4,10 @@
 #include <algorithm>
 #include <iterator>
 #include <numeric>
+#include <cassert>
 
 using namespace OpenRAVE;
-using std::vector; using std::pair; using std::map;
+using std::vector; using std::pair; using std::map; using std::string;
 using std::abs; using std::sqrt;
 using std::numeric_limits; using std::iota;
 using std::swap; using std::min; using std::max;
@@ -25,10 +26,10 @@ const dReal error_tolerance_c = .005;
 const dReal surface_slice_resolution_c = .005;
 const dReal cos_error_c = .001;
 
-const dReal foot_h_c = 0.25;
-const dReal foot_h_w = 0.135;
-const dReal hand_h_c = 0.20;
-const dReal hand_h_w = 0.14;
+const dReal foot_height_c = 0.25;
+const dReal foot_width_c = 0.135;
+const dReal hand_height_c = 0.20;
+const dReal hand_width_c = 0.14;
 
 int Structure::num_structures = 0;
 
@@ -320,12 +321,12 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 
 	update_center();
 
-	Vector xv{vertices[0][0] - xo, vertices[0][1] - yo, vertices[0][2] - zo};
-	xv.normalize();
-	Vector yv = get_normal().cross(xv); // double check this?
+	assert(vertices.size());
+	Vector xv = (vertices[0] - get_center()).normalize();
+	Vector yv = get_normal().cross(xv);
 	Vector zv = get_normal();
 
-	transform_matrix.rotfrommat(xv[0], xv[1], xv[2], yv[0], yv[1], yv[2], zv[0], zv[1], zv[2]);
+	transform_matrix.rotfrommat(xv.x, xv.y, xv.z, yv.x, yv.y, yv.z, zv.x, zv.y, zv.z);
 	transform_matrix.trans = get_center();
 	inverse_transform_matrix = transform_matrix.inverse();
 
@@ -375,12 +376,12 @@ Transform Tri_mesh::get_inverse_transform() const {
 // returns 2D point projected in plane frame. This assumes the "ray" is the surface normal.
 Vector Tri_mesh::projection_plane_frame(const Vector & point) const {
 	Vector proj_point = inverse_transform_matrix * point;
-	proj_point.z = 0; // flatten point
+	proj_point.z = 0; // flatten point to 2D
 	return proj_point;
 }
 
 Vector Tri_mesh::projection_global_frame(const Vector & projected_point, const Vector & ray) const {
-	Vector cosine = get_normal() * ray;
+	dReal cosine = (get_normal() * ray).x;
 	dReal t = -c - (get_normal() * projected_point).x / cosine; // double check asserts
 	Vector p = projected_point + t * ray;
 	return p;
@@ -421,35 +422,44 @@ bool Tri_mesh::inside_polygon_plane_frame(const Vector & projected_point) const 
 	return distance(bound_it, y_bounds_it->second.begin()) % 2 == 1;
 }
 
-// polygon must be convex
-bool Tri_mesh::contact_inside_polygon(const Vector & tf, const string & contact_type) const {
+// polygon must be convex. contacts are rectangles.
+// TODO: split this fn up instead of switching on type
+bool Tri_mesh::contact_inside_polygon(const Transform & tf, const string & contact_type) const {
 	dReal h;
 	dReal w;
-	Transform contact_vertices;
+	vector<Vector> contact_vertices(4);
 
 	if(contact_type == "foot") {
-		h = foot_h_c / 2;
-		w = foot_w_c / 2;
-		contact_vertices.rotfrommat(h, h, h, w, -w, w, 0, 0, 0, 1, 1, 1);
-		contact_vertices.trans = Vector{-h, -w, 0, 1};
+		h = foot_height_c / 2;
+		w = foot_width_c / 2;
+		contact_vertices[0] = {h, w, 0, 1};
+		contact_vertices[1] = {h, -w, 0, 1};
+		contact_vertices[2] = {-h, w, 0, 1};
+		contact_vertices[3] = {-h, -w, 0, 1};
 	} else if(contact_type == "hand") {
-		h = hand_h_c / 2;
-		w = hand_w_c / 2;
-		contact_vertices.rotfrommat(0, 0, 0, h, h, -h, w, -w, w, 1, 1, 1);
-		contact_vertices.trans = Vector{0, -h, -w, 1};
+		h = hand_height_c / 2;
+		w = hand_width_c / 2;
+		contact_vertices[0] = {0, h, w, 1};
+		contact_vertices[1] = {0, h, -w, 1};
+		contact_vertices[2] = {0, -h, w, 1};
+		contact_vertices[3] = {0, -h, -w, 1};
 	} else {
 		// unexpected contact.
 		// add exceptions to code? -> slight performance decrease.
 		return false;
 	}
 
-	tf_vertices = tf * contact_vertices;
-	// call inside polygon
+	// check if transformed contact vertex is inside polygon
+	for(Vector & vertex : contact_vertices) {
+		if(!inside_polygon(tf * vertex)) return false;
+	}
+
 	return true;
 }
 
-Transform Tri_mesh::projection(const Vector & origin, const Vector & ray, dReal roll, const string & end_effector_type,
-							   bool valid_contact) const {
+// roll is the rotation of the contact about ray
+Transform Tri_mesh::projection(const Vector & origin, const Vector & ray, dReal roll,
+							   const string & end_effector_type, bool valid_contact) const {
 
 	Vector translation = projection_global_frame(origin, ray);
 
@@ -457,8 +467,8 @@ Transform Tri_mesh::projection(const Vector & origin, const Vector & ray, dReal 
 
 	if(end_effector_type == "foot") {
 		cz = get_normal();
-		cx = Vector{cos(roll * std::M_PI / 180, std::sin(roll * std::M_PI / 180), 0)};
-		cy = cz.cross(cz).normalize();
+		cx = {cos(roll * M_PI / 180), sin(roll * M_PI / 180), 0};
+		cy = cz.cross(cx).normalize();
 		cx = cy.cross(cy);
 	}
 

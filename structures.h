@@ -168,14 +168,16 @@ public:
 	bool inside_polygon(const OpenRAVE::Vector & point) const;
 	bool inside_polygon_plane_frame(const OpenRAVE::Vector & projected_point) const;
 
-	// polygon must be convex
+	// polygon must be convex. contacts are rectangles.
+	// TODO: split this fn up instead of switching on type
 	bool contact_inside_polygon(const OpenRAVE::Transform & tf, const std::string & contact_type) const;
 
+	// roll is the rotation of the contact about ray
 	OpenRAVE::Transform projection(const OpenRAVE::Vector & origin, const OpenRAVE::Vector & ray, OpenRAVE::dReal roll,
 								   const std::string & end_effector_type, bool valid_contact) const;
 
 	// extract binary checking into another fn
-	dReal dist_to_boundary(OpenRAVE::Vector point, OpenRAVE::dReal search_radius = 999/*, bool binary_checking = false*/) const;
+	OpenRAVE::dReal dist_to_boundary(OpenRAVE::Vector point, OpenRAVE::dReal search_radius = 999/*, bool binary_checking = false*/) const;
 };
 
 #endif
