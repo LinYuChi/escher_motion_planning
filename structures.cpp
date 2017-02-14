@@ -314,19 +314,21 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 				   Structure(_kinbody), edges(_edges), vertices(_vertices) {
 
 	plane_parameters.normalize();
-	nx = plane_parameters[0];
-	ny = plane_parameters[1];
-	nz = plane_parameters[2];
-	c = plane_parameters[3];
+	nx = plane_parameters.x;
+	ny = plane_parameters.y;
+	nz = plane_parameters.z;
+	c = plane_parameters.w;
 
 	update_center();
 
 	assert(vertices.size());
-	Vector xv = (vertices[0] - get_center()).normalize();
-	Vector yv = get_normal().cross(xv);
-	Vector zv = get_normal();
 
-	transform_matrix.rotfrommat(xv.x, xv.y, xv.z, yv.x, yv.y, yv.z, zv.x, zv.y, zv.z);
+	// see: http://fastgraph.com/makegames/3drotation/
+	Vector out = (vertices[0] - get_center()).normalize(); // line of sight is from a vertex to center
+	Vector up = get_normal();
+	Vector right = out.cross(up);
+
+	transform_matrix.rotfrommat(right.x, up.x, out.x, right.y, up.y, out.y, right.z, up.z, out.z);
 	transform_matrix.trans = get_center();
 	inverse_transform_matrix = transform_matrix.inverse();
 
@@ -381,7 +383,7 @@ Vector Tri_mesh::projection_plane_frame(const Vector & point) const {
 }
 
 Vector Tri_mesh::projection_global_frame(const Vector & projected_point, const Vector & ray) const {
-	dReal cosine = (get_normal() * ray).x;
+	dReal cosine = get_normal().dot(ray);
 	dReal t = -c - (get_normal() * projected_point).x / cosine; // double check asserts
 	Vector p = projected_point + t * ray;
 	return p;
@@ -472,20 +474,20 @@ Transform Tri_mesh::projection(const Vector & origin, const Vector & ray, dReal 
 		cx = cy.cross(cy);
 	}
 
-	Transform ret_transform;
-	ret_transform.rotfrommat(cx.x, cx.y, cx.z, cy.x, cy.y. cy.z, cz.x, cz.y. cz.z);
+	TransformMatrix ret_transform;
+	ret_transform.rotfrommat(cx.x, cx.y, cx.z, cy.x, cy.y, cy.z, cz.x, cz.y, cz.z);
 	ret_transform.trans = translation;
-	return 
+	return ret_transform;
 }
 
 // extract binary checking into another function
-dReal Tri_mesh::dist_to_boundary(Vector point, dReal search_radius = 999/*, bool binary_checking = false*/) const {
+dReal Tri_mesh::dist_to_boundary(Vector point, dReal search_radius/*, bool binary_checking = false*/) const {
 	Vector proj_p = projection_plane_frame(point);
 	dReal dist = search_radius; // assume point is inside boundaries
 
-	int upper_x = min(ceil((point.x + search_radius - self.min_proj_x) / surface_slice_resolution_c ), boundaries.size());
-	int middle_x = (point.x - self.min_proj_x) / surface_slice_resolution_c;
-	int lower_x = max((point.x - search_radius-self.min_proj_x) / surface_slice_resolution_c, 0);
+	int upper_x = min(ceil((point.x + search_radius - min_proj_x) / surface_slice_resolution_c), (dReal)boundaries.size());
+	int middle_x = (point.x - min_proj_x) / surface_slice_resolution_c;
+	int lower_x = max((point.x - search_radius - min_proj_x) / surface_slice_resolution_c, 0.);
 
 	int half_interval_x = min(upper_x - middle_x, middle_x - lower_x);
 
@@ -499,16 +501,16 @@ dReal Tri_mesh::dist_to_boundary(Vector point, dReal search_radius = 999/*, bool
 		// if(binary_checking) return false;
 	}
 
-	vector x_slices(2 * half_interval_x);
+	vector<dReal> x_slices(2 * half_interval_x);
 	std::iota(x_slices.begin(), x_slices.end(), middle_x - half_interval_x);
 
-	sort(x_slices.begin(), x_slices.end(), [&point](int a, int b) {
+	sort(x_slices.begin(), x_slices.end(), [&point, this](int a, int b) {
 		return abs(surface_slice_resolution_c * a + min_proj_x - point.x) <
 				abs(surface_slice_resolution_c * b + min_proj_x - point.x);
 	});
 
 	for(dReal ix : x_slices) {
-		y_bounds = boundaries.at(ix);
+		auto y_bounds = boundaries.at(ix);
 		dReal x_coord = surface_slice_resolution_c * ix + min_proj_x;
 
 		if(abs(x_coord - point.x) > dist) {
@@ -518,7 +520,7 @@ dReal Tri_mesh::dist_to_boundary(Vector point, dReal search_radius = 999/*, bool
 		for(int i = 0; i < y_bounds.size() - 1; ++i) {
 			dReal y_bound = y_bounds[i];
 			dReal next_y_bound = y_bounds[i + 1];
-			dReal dist_to_slice_bound = min(euclidean_distance_2d(Vector{x, y_bound}, point), euclidean_distance_2d(Vector{x, next_y_bound}, point));
+			dReal dist_to_slice_bound = min(euclidean_distance_2d(Vector{x_coord, y_bound, 0}, point), euclidean_distance_2d(Vector{x_coord, next_y_bound, 0}, point));
 
 			if(dist_to_slice_bound < dist) {
 				dist = dist_to_slice_bound;
