@@ -325,22 +325,17 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 
 	assert(vertices.size());
 
-	see: http://fastgraph.com/makegames/3drotation/
-	Vector out = (vertices[0] - get_center()).normalize(); // line of sight is from a vertex to center
+	// see: http://fastgraph.com/makegames/3drotation/
+	Vector dir = (vertices[0] - get_center()).normalize(); // line of sight is from a vertex to center
 	Vector up = get_normal();
-	Vector right = out.cross(up);
-	std::cout << out << std::endl;
-	std::cout << up << std::endl;
-	std::cout << right << std::endl;
-	double theta = 13.7;
-	transform_matrix.rotfrommat(cos(theta), -sin(theta), 0, sin(theta), cos(theta), 0, 0, 0, 1);
-	// transform_matrix.rotfrommat(right.x, up.x, out.x, right.y, up.y, out.y, right.z, up.z, out.z);
+	Vector right = up.cross(dir);
+
+	transform_matrix.rotfrommat(right.x, up.x, dir.x, right.y, up.y, dir.y, right.z, up.z, dir.z);
+	
 	transform_matrix.trans = get_center();
 	inverse_transform_matrix = transform_matrix.inverse();
-
 	update_proj_vertices();
 }
-
 
 void Tri_mesh::transform_data(OpenRAVE::Transform transform) {
 	transform_matrix = transform_matrix * transform;

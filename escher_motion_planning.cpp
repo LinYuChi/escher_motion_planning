@@ -63,19 +63,22 @@ class EscherMotionPlanning : public ModuleBase
 
             GetEnv()->GetRobots(robots);
             SetActiveRobots(robot_name,robots);
+            try {
+                // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
+                Environment_handler env_handler{GetInterfaceType(), GetEnv()};
+                // sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
+                //****************************************************************************//
+                // Something about constructing environment objects. (walls, ground, and etc.)//
+                //****************************************************************************//
 
-            // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
-            Environment_handler env_handler{GetInterfaceType(), GetEnv()};
-            // sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
-            //****************************************************************************//
-            // Something about constructing environment objects. (walls, ground, and etc.)//
-            //****************************************************************************//
+                // After loading all the parameters, environment object and robot objects, you can execute the main planning function.
 
-            // After loading all the parameters, environment object and robot objects, you can execute the main planning function.
-
-            //**************************//
-            // Something about planning //
-            //**************************//
+                //**************************//
+                //**************************//
+                // Something about planning //
+            } catch(std::exception & e) {
+                sout << "Exception caught: " << e.what() << "\n";
+            }
 
             //return the result
             sout << "This is the output message.";

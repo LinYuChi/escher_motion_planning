@@ -77,14 +77,24 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 	// boxes.push_back(move(b2));
 	// boxes.push_back(move(ground));
 
-	// tri_meshes.push_back(move(tri));
+	tri_meshes.push_back(move(tri));
 
-	// for(unique_ptr<Box> & box : boxes) {
-	// 	box->get_kinbody()->InitFromBoxes(box->get_parameter(), true);
-	// 	penv->Add(box->get_kinbody());
-	// 	box->get_kinbody()->SetTransform(box->get_transform());
-	// 	box->get_kinbody()->GetLinks()[0]->GetGeometries()[0]->SetDiffuseColor(box->get_color());
-	// }
+	for(unique_ptr<Box> & box : boxes) {
+		box->get_kinbody()->InitFromBoxes(box->get_parameter(), true);
+		penv->Add(box->get_kinbody());
+		box->get_kinbody()->SetTransform(box->get_transform());
+		box->get_kinbody()->GetLinks()[0]->GetGeometries()[0]->SetDiffuseColor(box->get_color());
+	}
+
+	for(unique_ptr<Tri_mesh> & tri_mesh : tri_meshes) {
+		TriMesh tm;
+		tm.vertices = tri_vertices;
+		tm.indices = {0, 1, 2, 3};
+		tri_mesh->get_kinbody()->InitFromTrimesh(tm, true);
+		penv->Add(tri_mesh->get_kinbody());
+		tri_mesh->get_kinbody()->SetTransform(tri_mesh->get_transform());
+		// box->get_kinbody()->GetLinks()[0]->GetGeometries()[0]->SetDiffuseColor(box->get_color());
+	}
 }
 
 // box world
@@ -145,7 +155,7 @@ double Environment_handler::dist_to_boundary(dReal x, dReal y, dReal z) {
 
 		if(box->dist_from_quadrant_one_corner(projected_point) < nearest_boundary_dist) {
 			Vector over_boundary_point = box->over_quadrant_one_corner(projected_point);
-			cout << over_boundary_point << endl;
+
 			if(!even_boundary_surface_height(over_boundary_point, z)) {
 				nearest_boundary_dist = box->dist_from_quadrant_one_corner(projected_point);
 			}
