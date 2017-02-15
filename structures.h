@@ -16,34 +16,6 @@ class Structure {
 public:
 	Structure(OpenRAVE::KinBodyPtr _kinbody) : kinbody(_kinbody), id(num_structures++) { set_name(); }
 	OpenRAVE::KinBodyPtr get_kinbody() const { return kinbody; }
-
-	virtual OpenRAVE::dReal get_height() const = 0;
-	virtual OpenRAVE::Vector get_color() const = 0;
-
-	virtual OpenRAVE::Transform get_transform() const = 0;
-	virtual OpenRAVE::Transform get_inverse_transform() const = 0;
-	virtual std::vector<OpenRAVE::AABB> get_parameter() const = 0;
-
-	/*** BOX-SPECIFIC FNS BELOW ***/
-	virtual bool within_x_bounds(const OpenRAVE::Vector & projected) const = 0;
-	virtual bool within_y_bounds(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_pos_y_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_neg_y_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_pos_x_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_neg_x_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_quadrant_one_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_quadrant_two_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_quadrant_three_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::dReal dist_from_quadrant_four_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_pos_y_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_neg_y_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_pos_x_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_neg_x_bound(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_quadrant_one_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_quadrant_two_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_quadrant_three_corner(const OpenRAVE::Vector & projected) const = 0;
-	virtual OpenRAVE::Vector over_quadrant_four_corner(const OpenRAVE::Vector & projected) const = 0;
-
 };
 
 class Box : public Structure {
@@ -51,7 +23,6 @@ class Box : public Structure {
 
 	// Transformation matrix
 	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
-
 
 	/// Box position
 	OpenRAVE::dReal x;
@@ -177,7 +148,9 @@ public:
 								   const std::string & end_effector_type, bool valid_contact) const;
 
 	// extract binary checking into another fn
-	OpenRAVE::dReal dist_to_boundary(OpenRAVE::Vector point, OpenRAVE::dReal search_radius = 999/*, bool binary_checking = false*/) const;
+	OpenRAVE::dReal dist_to_boundary(OpenRAVE::Vector point, OpenRAVE::dReal search_radius = 999
+									 /*, bool binary_checking = false*/) const;
+
 };
 
 #endif

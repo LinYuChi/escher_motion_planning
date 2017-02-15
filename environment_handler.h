@@ -7,7 +7,8 @@
 #include <memory>
 
 class Environment_handler {
-	std::vector<std::unique_ptr<Structure>> structures;
+	std::vector<std::unique_ptr<Box>> boxes;
+	std::vector<std::unique_ptr<Tri_mesh>> tri_meshes;
 	OpenRAVE::EnvironmentBasePtr penv;
 	// double start_dist_to_boundary;
 	// double goal_dist_to_boundary;

@@ -1,10 +1,12 @@
 #include "structures.h"
+
 #include <cmath>
 #include <limits>
 #include <algorithm>
 #include <iterator>
 #include <numeric>
 #include <cassert>
+#include <iostream>
 
 using namespace OpenRAVE;
 using std::vector; using std::pair; using std::map; using std::string;
@@ -323,12 +325,16 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 
 	assert(vertices.size());
 
-	// see: http://fastgraph.com/makegames/3drotation/
+	see: http://fastgraph.com/makegames/3drotation/
 	Vector out = (vertices[0] - get_center()).normalize(); // line of sight is from a vertex to center
 	Vector up = get_normal();
 	Vector right = out.cross(up);
-
-	transform_matrix.rotfrommat(right.x, up.x, out.x, right.y, up.y, out.y, right.z, up.z, out.z);
+	std::cout << out << std::endl;
+	std::cout << up << std::endl;
+	std::cout << right << std::endl;
+	double theta = 13.7;
+	transform_matrix.rotfrommat(cos(theta), -sin(theta), 0, sin(theta), cos(theta), 0, 0, 0, 1);
+	// transform_matrix.rotfrommat(right.x, up.x, out.x, right.y, up.y, out.y, right.z, up.z, out.z);
 	transform_matrix.trans = get_center();
 	inverse_transform_matrix = transform_matrix.inverse();
 

@@ -66,7 +66,7 @@ class EscherMotionPlanning : public ModuleBase
 
             // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
             Environment_handler env_handler{GetInterfaceType(), GetEnv()};
-            sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
+            // sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
             //****************************************************************************//
             // Something about constructing environment objects. (walls, ground, and etc.)//
             //****************************************************************************//
