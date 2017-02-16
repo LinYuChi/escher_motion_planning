@@ -330,7 +330,7 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 	Vector up = get_normal();
 	Vector right = up.cross(dir);
 
-	transform_matrix.rotfrommat(right.x, up.x, dir.x, right.y, up.y, dir.y, right.z, up.z, dir.z);
+	transform_matrix.rotfrommat(dir.x, right.x, up.x, dir.y, right.y, up.y, dir.z, right.z, up.z);
 	
 	transform_matrix.trans = get_center();
 	inverse_transform_matrix = transform_matrix.inverse();

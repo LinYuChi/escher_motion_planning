@@ -58,17 +58,16 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 	unique_ptr<Box> b2 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
 
 	vector<Vector> tri_vertices {
-		{0.5, 0.5, 0},
-		{-0.5, 0.5, 0},
-		{-0.5, -0.5, 0},
-		{0.5, -0.5, 0}
+		{0.5, 0.5, -.005},
+		{-0.5, 0.5, -.005},
+		{-0.5, -0.5, -.005},
+		{0.5, -0.5, -.005}
 	};
 
 	vector<pair<int, int> > tri_edges {
 		std::make_pair(0, 1),
 		std::make_pair(1, 2),
-		std::make_pair(2, 3),
-		std::make_pair(3, 0)
+		std::make_pair(2, 3)
 	};
 
 	unique_ptr<Tri_mesh> tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1, 0}, tri_edges, tri_vertices});
@@ -89,7 +88,7 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 	for(unique_ptr<Tri_mesh> & tri_mesh : tri_meshes) {
 		TriMesh tm;
 		tm.vertices = tri_vertices;
-		tm.indices = {0, 1, 2, 3};
+		tm.indices = {0, 1, 2, 0, 2, 3};
 		tri_mesh->get_kinbody()->InitFromTrimesh(tm, true);
 		penv->Add(tri_mesh->get_kinbody());
 		tri_mesh->get_kinbody()->SetTransform(tri_mesh->get_transform());
