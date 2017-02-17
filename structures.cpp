@@ -28,10 +28,11 @@ const dReal error_tolerance_c = .005;
 const dReal surface_slice_resolution_c = .005;
 const dReal cos_error_c = .001;
 
-const dReal foot_height_c = 0.25;
-const dReal foot_width_c = 0.135;
-const dReal hand_height_c = 0.20;
-const dReal hand_width_c = 0.14;
+// from utility
+extern const dReal foot_height_c;
+extern const dReal foot_width_c;
+extern const dReal hand_height_c;
+extern const dReal hand_width_c;
 
 int Structure::num_structures = 0;
 
