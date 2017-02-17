@@ -20,11 +20,19 @@ class Environment_handler {
 	OpenRAVE::dReal highest_z(OpenRAVE::dReal x, OpenRAVE::dReal y);
 	// returns true if over_boundary_point is a "fake" boundary (e.g. adjacent structure is same height)
 	bool even_boundary_surface_height(const OpenRAVE::Vector& over_boundary_point, OpenRAVE::dReal z);
+	void add_tri_mesh_cylinder(OpenRAVE::dReal z_range, OpenRAVE::dReal r);
 public:
 	Environment_handler(OpenRAVE::InterfaceType i_type, OpenRAVE::EnvironmentBasePtr _penv);
 	void update_environment(OpenRAVE::InterfaceType i_type);
 	// box world
 	double dist_to_boundary(OpenRAVE::dReal x, OpenRAVE::dReal y, OpenRAVE::dReal z);
+
+	// returns set of circular regions
+	std::vector<OpenRAVE::Vector> sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance);
+
+	// Checks if there are obstacles inside radius r of sampled point above the surface
+	bool point_free_space(const Tri_mesh & tri_mesh, OpenRAVE::dReal r,
+						  OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> tf);
 };
 
 #endif

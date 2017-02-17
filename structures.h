@@ -126,6 +126,12 @@ public:
 	Tri_mesh(OpenRAVE::KinBodyPtr _kinbody, OpenRAVE::Vector plane_parameters,
 			 std::vector<std::pair<int, int> > _edges,
 			 std::vector<OpenRAVE::Vector> _vertices);
+
+	OpenRAVE::dReal get_min_proj_x() const { return min_proj_x; }
+	OpenRAVE::dReal get_max_proj_x() const { return max_proj_x; }
+	OpenRAVE::dReal get_min_proj_y() const { return min_proj_y; }
+	OpenRAVE::dReal get_max_proj_y() const { return max_proj_y; }
+
 	void transform_data(OpenRAVE::Transform transform);
 	OpenRAVE::Vector get_normal() const;
 	OpenRAVE::Vector get_center() const;

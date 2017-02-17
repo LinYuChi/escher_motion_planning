@@ -5,16 +5,18 @@
 #include <utility>
 #include <limits>
 #include <iostream>
+#include <set>
 
 using namespace OpenRAVE;
 
-using std::vector; using std::pair;
+using std::vector; using std::pair; using std::set;
 using std::cout; using std::endl;
 using std::max;
 using std::numeric_limits;
 using std::unique_ptr; using std::move;
 
 const double error_c = .001;
+const double clearance_error_c = .01;
 
 /*** PRIVATE MEM FNS ***/
 
@@ -37,6 +39,11 @@ bool Environment_handler::even_boundary_surface_height(const Vector& over_bounda
 	return z == highest_z(over_boundary_point[0], over_boundary_point[1]);
 }
 
+void Environment_handler::add_tri_mesh_cylinder(dReal z_range, dReal r) {
+	RaveCreateKinBody(penv);
+
+	// TODO: complete fn
+}
 
 /*** PUBLIC MEM FNS ***/
 
@@ -92,7 +99,6 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 		tri_mesh->get_kinbody()->InitFromTrimesh(tm, true);
 		penv->Add(tri_mesh->get_kinbody());
 		tri_mesh->get_kinbody()->SetTransform(tri_mesh->get_transform());
-		// box->get_kinbody()->GetLinks()[0]->GetGeometries()[0]->SetDiffuseColor(box->get_color());
 	}
 }
 
@@ -187,4 +193,52 @@ double Environment_handler::dist_to_boundary(dReal x, dReal y, dReal z) {
 	}
 	
 	return nearest_boundary_dist;
+}
+
+// returns set of circular regions
+vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance) {
+	vector<Vector> contact_samples;
+	set<pair<dReal, dReal> > checked_samples; // use pairs to utilize c++ pair's less than operator in set ordering
+
+	for(dReal proj_x = tri_mesh.get_min_proj_x(); proj_x < tri_mesh.get_max_proj_x(); proj_x += resolution) {
+		for(dReal proj_y = tri_mesh.get_min_proj_y(); proj_y < tri_mesh.get_max_proj_y(); proj_y += resolution) {
+
+			pair<dReal, dReal> curr_proj{proj_x, proj_y};
+			Vector curr_proj_point{curr_proj.first, curr_proj.second, 0}; // flatten to two dimensions
+
+			if(checked_samples.find(curr_proj) != checked_samples.end()) {
+				continue;
+			}
+
+			checked_samples.insert(curr_proj);
+
+			if(!tri_mesh.inside_polygon_plane_frame(curr_proj_point)) {
+				continue;
+			}
+
+			dReal r = tri_mesh.dist_to_boundary(curr_proj_point);
+
+			if(r <= boundary_clearance + clearance_error_c) {
+				continue;
+			}
+
+			// check collision
+			Vector point = tri_mesh.get_transform() * curr_proj_point;
+
+			// call point_free_space
+
+			curr_proj_point.z = r - boundary_clearance;
+			contact_samples.push_back({curr_proj_point});
+
+			// TODO: add proj_xx and proj_yy
+		}
+	}
+	return contact_samples;
+}
+
+// Checks if there are obstacles inside radius r of sampled point above the surface
+bool Environment_handler::point_free_space(const Tri_mesh & tri_mesh, dReal r,
+										   RaveTransformMatrix<dReal> tf) {
+	return true; 
+	//TODO : complete this fn
 }
