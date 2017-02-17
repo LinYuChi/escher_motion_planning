@@ -31,3 +31,5 @@ RaveTransformMatrix<dReal> get_SO3(const RPY_tf & e) {
 							  roll_y * yaw_y - roll_x * yaw_x * pitch_y, yaw_x * roll_y + roll_x * pitch_y * yaw_y, roll_x * pitch_x);
 	return ret_mat;
 }
+
+// SE(3) is similar, 

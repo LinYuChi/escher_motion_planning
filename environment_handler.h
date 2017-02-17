@@ -2,6 +2,7 @@
 #define ENVIRONMENT_HANDLER_H
 
 #include "structures.h"
+#include "motion_plan.h"
 
 #include <vector>
 #include <memory>
@@ -28,11 +29,13 @@ public:
 	double dist_to_boundary(OpenRAVE::dReal x, OpenRAVE::dReal y, OpenRAVE::dReal z);
 
 	// returns set of circular regions
-	std::vector<OpenRAVE::Vector> sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance);
+	std::vector<OpenRAVE::Vector> sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance) const;
 
 	// Checks if there are obstacles inside radius r of sampled point above the surface
 	bool point_free_space(const Tri_mesh & tri_mesh, OpenRAVE::dReal r,
 						  OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> tf);
+
+	std::vector<Contact_region> get_contact_regions() const;
 };
 
 #endif

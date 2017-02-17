@@ -6,17 +6,24 @@
 #include <limits>
 #include <iostream>
 #include <set>
+#include <algorithm>
 
 using namespace OpenRAVE;
 
 using std::vector; using std::pair; using std::set;
 using std::cout; using std::endl;
-using std::max;
+using std::min; using std::max;
 using std::numeric_limits;
 using std::unique_ptr; using std::move;
 
 const double error_c = .001;
 const double clearance_error_c = .01;
+
+// from utility
+extern const dReal foot_height_c;
+extern const dReal foot_width_c;
+extern const dReal hand_height_c;
+extern const dReal hand_width_c;
 
 /*** PRIVATE MEM FNS ***/
 
@@ -196,7 +203,7 @@ double Environment_handler::dist_to_boundary(dReal x, dReal y, dReal z) {
 }
 
 // returns set of circular regions
-vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance) {
+vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance) const {
 	vector<Vector> contact_samples;
 	set<pair<dReal, dReal> > checked_samples; // use pairs to utilize c++ pair's less than operator in set ordering
 
@@ -242,3 +249,35 @@ bool Environment_handler::point_free_space(const Tri_mesh & tri_mesh, dReal r,
 	return true; 
 	//TODO : complete this fn
 }
+
+// returns overlapping circular planes in environment
+vector<Contact_region> Environment_handler::get_contact_regions() const {
+	srand(time(NULL)); // initialize random seed (upgrade to c++11 rand?)
+	dReal normal_contact_radius = 0.15;
+
+	vector<Contact_region> ret_regions;
+
+	for(const unique_ptr<Tri_mesh> & tri_mesh : tri_meshes) {
+		// do fragment checking
+
+		RaveTransformMatrix<dReal> tri_tf = tri_mesh->get_transform();
+
+		dReal boundary_clearance = sqrt(pow(hand_height_c / 2, 2) + pow(hand_width_c / 2, 2)); // move euclidean distance functions to utility
+		dReal density = min(tri_mesh->get_max_proj_x() - tri_mesh->get_min_proj_x() / 20.0,
+							tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y() / 20.0);
+
+		vector<Vector> non_occupied_contact_samples = sample_points(*tri_mesh, density, boundary_clearance);
+
+		while(non_occupied_contact_samples.size()) {
+			int rand_sample_ind = rand() % non_occupied_contact_samples.size();
+			Vector rand_contact = non_occupied_contact_samples[rand_sample_ind];
+
+			Vector center = tri_tf * rand_contact;
+			dReal r = center.z;
+			// filter out based on radii
+
+			ret_regions.push_back({center, tri_mesh->get_normal(), r});
+		}
+	}	
+}
+
