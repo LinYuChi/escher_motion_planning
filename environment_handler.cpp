@@ -54,11 +54,14 @@ void Environment_handler::add_tri_mesh_cylinder(dReal z_range, dReal r) {
 
 /*** PUBLIC MEM FNS ***/
 
-Environment_handler::Environment_handler(InterfaceType i_type, EnvironmentBasePtr _penv) : penv(_penv) {
-	update_environment(i_type);
+Environment_handler::Environment_handler(EnvironmentBasePtr _penv) : penv(_penv) {
+
+	cout << "MAKING IT>" << std::endl;
+
+	update_environment();
 }
 
-void Environment_handler::update_environment(InterfaceType i_type) {
+void Environment_handler::update_environment() {
 	for(unique_ptr<Box> & box : boxes) {
 		penv->Remove(box->get_kinbody());
 	}
@@ -90,7 +93,7 @@ void Environment_handler::update_environment(InterfaceType i_type) {
 	// boxes.push_back(move(b2));
 	// boxes.push_back(move(ground));
 
-	tri_meshes.push_back(move(tri));
+	// tri_meshes.push_back(move(tri));
 
 	for(unique_ptr<Box> & box : boxes) {
 		box->get_kinbody()->InitFromBoxes(box->get_parameter(), true);
