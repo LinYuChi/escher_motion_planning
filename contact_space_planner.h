@@ -29,6 +29,12 @@ public:
 	// foot orientation projected to flat gruond
 	OpenRAVE::dReal get_left_horizontal_yaw() const;
 	OpenRAVE::dReal get_right_horizontal_yaw() const;
+
+	inline RPY_tf get_left_foot(){return left_foot;}
+	inline RPY_tf get_right_foot(){return right_foot;}
+	inline RPY_tf get_left_hand(){return left_hand;}
+	inline RPY_tf get_right_hand(){return right_hand;}
+	inline Node*  get_parent(){return parent;}
 };
 
 #endif

@@ -6,11 +6,6 @@ using OpenRAVE::dReal; using OpenRAVE::RaveTransformMatrix;
 using std::vector;
 using std::cos; using std::sin;
 
-const dReal foot_height_c = 0.25;
-const dReal foot_width_c = 0.135;
-const dReal hand_height_c = 0.20;
-const dReal hand_width_c = 0.14;
-
 RaveTransformMatrix<dReal> get_SO3(const RPY_tf & e) {
 	double roll_in_rad = e.roll * (M_PI / 180);
 	double pitch_in_rad = e.pitch * (M_PI / 180);
