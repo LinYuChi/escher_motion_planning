@@ -63,9 +63,10 @@ class EscherMotionPlanning : public ModuleBase
 
             GetEnv()->GetRobots(robots);
             SetActiveRobots(robot_name,robots);
-            try {
+            // try {
+                // sout << "esch_mot_plan cpp env pointer: " << GetEnv() << "\n";
                 // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
-                Environment_handler env_handler{GetEnv()};
+            Environment_handler env_handler{GetEnv()};
                 // sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
                 //****************************************************************************//
                 // Something about constructing environment objects. (walls, ground, and etc.)//
@@ -76,12 +77,15 @@ class EscherMotionPlanning : public ModuleBase
                 //**************************//
                 //**************************//
                 // Something about planning //
-            } catch(std::exception & e) {
-                sout << "Exception caught: " << e.what() << "\n";
-            }
+            // } catch(std::exception & e) {
+                // sout << "Exception caught: " << e.what() << "\n";
+            // }
 
             //return the result
             sout << "This is the output message.";
+
+            int a;
+            std::cin>>a; // block
 
             return true;
         }

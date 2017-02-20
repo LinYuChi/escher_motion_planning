@@ -1,5 +1,6 @@
 #include "environment_handler.h"
 #include "utility.h"
+#include "drawing.h"
 
 #include <string>
 #include <vector>
@@ -21,10 +22,10 @@ const double error_c = .001;
 const double clearance_error_c = .01;
 
 
-// const OpenRAVE::dReal foot_height_c = 0.25;
-// const OpenRAVE::dReal foot_width_c = 0.135;
-// const OpenRAVE::dReal hand_height_c = 0.20;
-// const OpenRAVE::dReal hand_width_c = 0.14;
+const OpenRAVE::dReal foot_height_c = 0.25;
+const OpenRAVE::dReal foot_width_c = 0.135;
+const OpenRAVE::dReal hand_height_c = 0.20;
+const OpenRAVE::dReal hand_width_c = 0.14;
 
 /*** PRIVATE MEM FNS ***/
 
@@ -55,11 +56,19 @@ void Environment_handler::add_tri_mesh_cylinder(dReal z_range, dReal r) {
 
 /*** PUBLIC MEM FNS ***/
 
-Environment_handler::Environment_handler(EnvironmentBasePtr _penv) : penv(_penv) {
+Environment_handler::Environment_handler(EnvironmentBasePtr _penv) : dh{_penv}, penv(_penv) {
 	update_environment();
 }
 
 void Environment_handler::update_environment() {
+
+	RaveVector<dReal> center(0, 0, 0);
+	RaveVector<dReal> normal(0, 0, -1);
+	float radius = 2;
+	float line_width = 5;
+
+	dh.DrawRegion(center, normal, radius, line_width);
+
 	for(unique_ptr<Box> & box : boxes) {
 		penv->Remove(box->get_kinbody());
 	}
@@ -91,7 +100,7 @@ void Environment_handler::update_environment() {
 	// boxes.push_back(move(b2));
 	// boxes.push_back(move(ground));
 
-	// tri_meshes.push_back(move(tri));
+	tri_meshes.push_back(move(tri));
 
 	for(unique_ptr<Box> & box : boxes) {
 		box->get_kinbody()->InitFromBoxes(box->get_parameter(), true);

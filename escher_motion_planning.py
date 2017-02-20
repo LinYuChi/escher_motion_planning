@@ -87,6 +87,8 @@ def main():
     EscherMotionPlanning = rave.RaveCreateModule(env,'EscherMotionPlanning')
     ### END INITIALIZING PLUGIN ###
 
+    # print("python env pointer: " + RaveGetEnvironment())
+
     SendStartPlanningCommand(EscherMotionPlanning,robotname=robot.GetName(),goal=[1.0,0.0,0.0],parallelization=True)
 
     raw_input("Press enter to exit...")

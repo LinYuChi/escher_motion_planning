@@ -3,6 +3,7 @@
 
 #include "structures.h"
 #include "motion_plan.h"
+#include "drawing.h"
 
 #include <vector>
 #include <memory>
@@ -11,6 +12,9 @@ class Environment_handler {
 	std::vector<std::unique_ptr<Box>> boxes;
 	std::vector<std::unique_ptr<Tri_mesh>> tri_meshes;
 	OpenRAVE::EnvironmentBasePtr penv;
+	std::vector<OpenRAVE::GraphHandlePtr > graphptrs;
+	Drawing_handler dh;
+
 	// double start_dist_to_boundary;
 	// double goal_dist_to_boundary;
 	// double goal_x;

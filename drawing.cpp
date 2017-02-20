@@ -9,6 +9,8 @@
 #include <cmath>
 #include <stdlib.h>
 
+#include <iostream>
+
 using namespace OpenRAVE;
 
 // from utility
@@ -182,23 +184,25 @@ void Drawing_handler::DrawRegion(RaveVector<dReal> center, RaveVector<dReal> nor
     	x_vector = RaveVector<dReal>(normal.y,-normal.x,0);
         x_vector = x_vector.normalize3();
     }
-        
+
     RaveVector<dReal> y_vector = normal.cross(x_vector);
 
-    std::vector< RaveVector<dReal> > region_boundary_points;
-    region_boundary_points.resize(37);
+    std::vector<RaveVector<float> >* region_boundary_points_float = new std::vector<RaveVector<float > >;
+    // std::vector< RaveVector<float> > region_boundary_points_float;
+    region_boundary_points_float->resize(37);
     RaveVector<dReal> region_boundary_point;
 
 	for(unsigned int i = 0; i < 37; i++)
 	{
 		region_boundary_point = center + std::cos(i*10*(M_PI / 180))*radius*x_vector + std::sin(i*10*(M_PI / 180))*radius*y_vector;
-		region_boundary_points[i] = region_boundary_point;
+		(*region_boundary_points_float)[i] = {region_boundary_point.x, region_boundary_point.y,
+									 region_boundary_point.z, region_boundary_point.w}; // truncate dReals to floats
 	}
 
-	float region_boundary_point_x_float = (float)region_boundary_points[0].x;
-	graphptrs.push_back(penv->drawlinestrip(&(region_boundary_point_x_float),region_boundary_points.size(),sizeof(region_boundary_points[0]),line_width,RaveVector<float>(0,0,0,0)));
+	region_boundary_pointers.push_back(region_boundary_points_float);
 
-	graphptrs.push_back(penv->drawarrow(center, center + 0.1 * normal, 0.005, RaveVector<float>(1,0,0)));
+	graphptrs.push_back(penv->drawlinestrip((float *)region_boundary_points_float->data(),region_boundary_points_float->size(),sizeof((*region_boundary_points_float)[0]),line_width,RaveVector<float>(0,0,0,1)));
+	graphptrs.push_back(penv->drawarrow(center, center + 0.1 * normal, 0.005, RaveVector<float>(1,0,0, 1)));
 }
 
 void Drawing_handler::DrawLineSegment(RaveVector<dReal> from_vec, RaveVector<dReal> to_vec) // Draw a line segment given two ends(DrawLineStrips)
@@ -238,4 +242,10 @@ void Drawing_handler::DrawSurface(Tri_mesh trimesh) // Draw the trimesh surface.
 void Drawing_handler::DrawObjectPath(Node* current) // Draw the manipulated object path, postpone implementation.(DrawObjectPath)
 {
 
+}
+
+Drawing_handler::~Drawing_handler() {
+	for(int i = 0; i < region_boundary_pointers.size(); ++i) {
+		delete region_boundary_pointers[i];
+	}
 }
