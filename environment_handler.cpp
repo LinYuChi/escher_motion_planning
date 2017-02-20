@@ -1,4 +1,5 @@
 #include "environment_handler.h"
+#include "utility.h"
 
 #include <string>
 #include <vector>
@@ -19,11 +20,11 @@ using std::unique_ptr; using std::move;
 const double error_c = .001;
 const double clearance_error_c = .01;
 
-// from utility
-extern const dReal foot_height_c;
-extern const dReal foot_width_c;
-extern const dReal hand_height_c;
-extern const dReal hand_width_c;
+
+// const OpenRAVE::dReal foot_height_c = 0.25;
+// const OpenRAVE::dReal foot_width_c = 0.135;
+// const OpenRAVE::dReal hand_height_c = 0.20;
+// const OpenRAVE::dReal hand_width_c = 0.14;
 
 /*** PRIVATE MEM FNS ***/
 
@@ -31,7 +32,7 @@ extern const dReal hand_width_c;
 dReal Environment_handler::highest_z(dReal x, dReal y) {
 	Vector point{x, y, 0, 1}; // reduce to 2 dimensions
 	double max_height = 0;
-	for(unique_ptr<Box> & box : boxes) {
+	for(const unique_ptr<Box> & box : boxes) {
 		Vector projected_foot_point = box->get_inverse_transform() * point;
 		if(box->within_x_bounds(projected_foot_point) &&
 		   box->within_y_bounds(projected_foot_point)) {
@@ -55,9 +56,6 @@ void Environment_handler::add_tri_mesh_cylinder(dReal z_range, dReal r) {
 /*** PUBLIC MEM FNS ***/
 
 Environment_handler::Environment_handler(EnvironmentBasePtr _penv) : penv(_penv) {
-
-	cout << "MAKING IT>" << std::endl;
-
 	update_environment();
 }
 
@@ -266,6 +264,7 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 		RaveTransformMatrix<dReal> tri_tf = tri_mesh->get_transform();
 
 		dReal boundary_clearance = sqrt(pow(hand_height_c / 2, 2) + pow(hand_width_c / 2, 2)); // move euclidean distance functions to utility
+		// move hand_width_c etc. const globals to one place?
 		dReal density = min(tri_mesh->get_max_proj_x() - tri_mesh->get_min_proj_x() / 20.0,
 							tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y() / 20.0);
 

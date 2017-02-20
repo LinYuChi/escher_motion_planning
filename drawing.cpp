@@ -11,6 +11,12 @@
 
 using namespace OpenRAVE;
 
+// from utility
+extern const dReal foot_height_c;
+extern const dReal foot_width_c;
+extern const dReal hand_height_c;
+extern const dReal hand_width_c;
+
 Drawing_handler::Drawing_handler(EnvironmentBasePtr _penv):penv(_penv)
 {
 	foot_corners.resize(4);

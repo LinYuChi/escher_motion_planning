@@ -2,7 +2,7 @@
 all:
 	@mkdir -p build; rm -f build/CMakeCache.txt
 	cd build && cmake .. && $(MAKE) $(PARALLEL_JOBS)
-	# python escher_motion_planning.py
+	python escher_motion_planning.py
 
 install:
 	cd build && $(MAKE) $(PARALLEL_JOBS) install

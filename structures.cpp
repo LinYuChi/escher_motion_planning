@@ -1,4 +1,5 @@
 #include "structures.h"
+#include "utility.h"
 
 #include <cmath>
 #include <limits>
@@ -28,11 +29,11 @@ const dReal error_tolerance_c = .005;
 const dReal surface_slice_resolution_c = .005;
 const dReal cos_error_c = .001;
 
-// from utility
-extern const dReal foot_height_c;
-extern const dReal foot_width_c;
-extern const dReal hand_height_c;
-extern const dReal hand_width_c;
+
+// const extern OpenRAVE::dReal foot_height_c;
+// const extern OpenRAVE::dReal foot_width_c;
+// const extern OpenRAVE::dReal hand_height_c;
+// const extern OpenRAVE::dReal hand_width_c;
 
 int Structure::num_structures = 0;
 
