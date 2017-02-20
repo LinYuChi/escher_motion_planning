@@ -23,8 +23,8 @@ class Environment_handler {
 	bool even_boundary_surface_height(const OpenRAVE::Vector& over_boundary_point, OpenRAVE::dReal z);
 	void add_tri_mesh_cylinder(OpenRAVE::dReal z_range, OpenRAVE::dReal r);
 public:
-	Environment_handler(OpenRAVE::InterfaceType i_type, OpenRAVE::EnvironmentBasePtr _penv);
-	void update_environment(OpenRAVE::InterfaceType i_type);
+	Environment_handler(OpenRAVE::EnvironmentBasePtr _penv);
+	void update_environment();
 	// box world
 	double dist_to_boundary(OpenRAVE::dReal x, OpenRAVE::dReal y, OpenRAVE::dReal z);
 
