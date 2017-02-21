@@ -339,6 +339,13 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 	update_proj_vertices();
 }
 
+TriMesh Tri_mesh::get_openrave_trimesh() const {
+	TriMesh ret_tm;
+	ret_tm.vertices = vertices;
+	ret_tm.indices = {0, 1, 2, 2, 3, 0}; // generalize this to non-rectangular tri meshes
+	return ret_tm;
+}
+
 void Tri_mesh::transform_data(OpenRAVE::Transform transform) {
 	transform_matrix = transform_matrix * transform;
 	inverse_transform_matrix = inverse_transform_matrix * transform.inverse();
@@ -413,13 +420,14 @@ bool Tri_mesh::inside_polygon_plane_frame(const Vector & projected_point) const 
 		return false;
 	}
 
-	int query_x = (projected_point.x - min_proj_x) / surface_slice_resolution_c;
+	// std::cout << "proj x: " << projected_point.x << std::endl;
+	int query_x = floor(projected_point.x - min_proj_x) / surface_slice_resolution_c;
+	// std::cout << "query x: " << query_x << std::endl;
 	auto y_bounds_it = boundaries.find(query_x);
 
 	if(y_bounds_it == boundaries.end()) {
 		return false;
 	}
-
 	int pass_boundary_count = 0;
 
 	// considers points "on border" to be within the frame

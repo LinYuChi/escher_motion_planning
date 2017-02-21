@@ -82,8 +82,7 @@ class EscherMotionPlanning : public ModuleBase
             // }
 
             //return the result
-            sout << "This is the output message.";
-
+            sout << "Press any button to finish." << "\n";
             int a;
             std::cin>>a; // block
 

@@ -61,14 +61,6 @@ Environment_handler::Environment_handler(EnvironmentBasePtr _penv) : dh{_penv}, 
 }
 
 void Environment_handler::update_environment() {
-
-	RaveVector<dReal> center(0, 0, 0);
-	RaveVector<dReal> normal(0, 0, -1);
-	float radius = 2;
-	float line_width = 5;
-
-	dh.DrawRegion(center, normal, radius, line_width);
-
 	for(unique_ptr<Box> & box : boxes) {
 		penv->Remove(box->get_kinbody());
 	}
@@ -81,26 +73,42 @@ void Environment_handler::update_environment() {
 	unique_ptr<Box> b1 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
 	unique_ptr<Box> b2 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
 
-	vector<Vector> tri_vertices {
+	vector<Vector> start_tri_vertices {
 		{0.5, 0.5, -.005},
 		{-0.5, 0.5, -.005},
 		{-0.5, -0.5, -.005},
 		{0.5, -0.5, -.005}
 	};
 
-	vector<pair<int, int> > tri_edges {
+	vector<pair<int, int> > start_tri_edges {
 		std::make_pair(0, 1),
 		std::make_pair(1, 2),
 		std::make_pair(2, 3)
 	};
 
-	unique_ptr<Tri_mesh> tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1, 0}, tri_edges, tri_vertices});
+	vector<Vector> end_tri_vertices {
+		{5.5, 0.5, -.005},
+		{4.5, 0.5, -.005},
+		{4.5, -0.5, -.005},
+		{5.5, -0.5, -.005}
+	};
+
+	vector<pair<int, int> > end_tri_edges {
+		std::make_pair(0, 1),
+		std::make_pair(1, 2),
+		std::make_pair(2, 3)
+	};
+
+	unique_ptr<Tri_mesh> start_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, start_tri_edges, start_tri_vertices});
+	unique_ptr<Tri_mesh> end_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, end_tri_edges, end_tri_vertices});
+
 
 	// boxes.push_back(move(b1));
 	// boxes.push_back(move(b2));
 	// boxes.push_back(move(ground));
 
-	tri_meshes.push_back(move(tri));
+	tri_meshes.push_back(move(start_tri));
+	tri_meshes.push_back(move(end_tri));
 
 	for(unique_ptr<Box> & box : boxes) {
 		box->get_kinbody()->InitFromBoxes(box->get_parameter(), true);
@@ -110,13 +118,15 @@ void Environment_handler::update_environment() {
 	}
 
 	for(unique_ptr<Tri_mesh> & tri_mesh : tri_meshes) {
-		TriMesh tm;
-		tm.vertices = tri_vertices;
-		tm.indices = {0, 1, 2, 0, 2, 3};
-		tri_mesh->get_kinbody()->InitFromTrimesh(tm, true);
+		tri_mesh->get_kinbody()->InitFromTrimesh(tri_mesh->get_openrave_trimesh(), true);
 		penv->Add(tri_mesh->get_kinbody());
-		tri_mesh->get_kinbody()->SetTransform(tri_mesh->get_transform());
 	}
+
+	vector<Contact_region> crs = get_contact_regions();
+	// std::cout << crs.size() << std::endl;
+	// for(auto cr: crs) {
+	// 	std::cout << cr.position << std::endl;
+	// } do some drawing here
 }
 
 // box world
@@ -215,33 +225,39 @@ double Environment_handler::dist_to_boundary(dReal x, dReal y, dReal z) {
 // returns set of circular regions
 vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, double resolution, double boundary_clearance) const {
 	vector<Vector> contact_samples;
-	set<pair<dReal, dReal> > checked_samples; // use pairs to utilize c++ pair's less than operator in set ordering
+	// set<pair<dReal, dReal> > checked_samples; // use pairs to utilize c++ pair's less than operator in set ordering
+
+	// std::cout << "tri_center: " << tri_mesh.get_center() << std::endl;
+	// std::cout << "tri_norm: " << tri_mesh.get_normal() << std::endl;
+	// std::cout << "res: " << resolution << std::endl;
+	// std::cout << "boundary clear: " << boundary_clearance << std::endl;
 
 	for(dReal proj_x = tri_mesh.get_min_proj_x(); proj_x < tri_mesh.get_max_proj_x(); proj_x += resolution) {
 		for(dReal proj_y = tri_mesh.get_min_proj_y(); proj_y < tri_mesh.get_max_proj_y(); proj_y += resolution) {
+			// std::cout << "x: " << proj_x << std::endl;
+			// std::cout << "y: " << proj_y << std::endl;
 
 			pair<dReal, dReal> curr_proj{proj_x, proj_y};
 			Vector curr_proj_point{curr_proj.first, curr_proj.second, 0}; // flatten to two dimensions
 
-			if(checked_samples.find(curr_proj) != checked_samples.end()) {
-				continue;
-			}
+			// if(checked_samples.find(curr_proj) != checked_samples.end()) {
+				// continue; <- shouldn't be getting here?
+			// }
 
-			checked_samples.insert(curr_proj);
+			// checked_samples.insert(curr_proj);
 
 			if(!tri_mesh.inside_polygon_plane_frame(curr_proj_point)) {
 				continue;
 			}
-
+			// std::cout << "first break" << std::endl;
 			dReal r = tri_mesh.dist_to_boundary(curr_proj_point);
 
 			if(r <= boundary_clearance + clearance_error_c) {
 				continue;
 			}
-
+			// std::cout << "second break" << std::endl;
 			// check collision
-			Vector point = tri_mesh.get_transform() * curr_proj_point;
-
+			// Vector point = tri_mesh.get_transform() * curr_proj_point;
 			// call point_free_space
 
 			curr_proj_point.z = r - boundary_clearance;
@@ -274,8 +290,8 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 
 		dReal boundary_clearance = sqrt(pow(hand_height_c / 2, 2) + pow(hand_width_c / 2, 2)); // move euclidean distance functions to utility
 		// move hand_width_c etc. const globals to one place?
-		dReal density = min(tri_mesh->get_max_proj_x() - tri_mesh->get_min_proj_x() / 20.0,
-							tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y() / 20.0);
+		dReal density = min((tri_mesh->get_max_proj_x() - tri_mesh->get_min_proj_x()) / 20.0,
+							(tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y()) / 20.0);
 
 		vector<Vector> non_occupied_contact_samples = sample_points(*tri_mesh, density, boundary_clearance);
 
@@ -284,11 +300,13 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 			Vector rand_contact = non_occupied_contact_samples[rand_sample_ind];
 
 			Vector center = tri_tf * rand_contact;
+			Vector normal = tri_mesh->get_normal() * -1;
 			dReal r = center.z;
 			// filter out based on radii
 
 			ret_regions.push_back({center, tri_mesh->get_normal(), r});
+			non_occupied_contact_samples.erase(non_occupied_contact_samples.begin() + rand_sample_ind);
 		}
-	}	
+	}
 }
 

@@ -127,6 +127,8 @@ public:
 			 std::vector<std::pair<int, int> > _edges,
 			 std::vector<OpenRAVE::Vector> _vertices);
 
+	OpenRAVE::TriMesh get_openrave_trimesh() const;
+
 	OpenRAVE::dReal get_min_proj_x() const { return min_proj_x; }
 	OpenRAVE::dReal get_max_proj_x() const { return max_proj_x; }
 	OpenRAVE::dReal get_min_proj_y() const { return min_proj_y; }
