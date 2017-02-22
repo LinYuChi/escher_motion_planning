@@ -125,7 +125,6 @@ void Environment_handler::update_environment() {
 	}
 
 	vector<Contact_region> crs = get_contact_regions();
-	std::cout << crs.size() << std::endl;
 	for(const auto & cr: crs) {
 		// std::cout << cr.position.z << std::endl;
 		dh.DrawRegion(cr.position, cr.normal, cr.radius, 1);
@@ -230,11 +229,6 @@ vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, dou
 	vector<Vector> contact_samples;
 	// set<pair<dReal, dReal> > checked_samples; // use pairs to utilize c++ pair's less than operator in set ordering
 
-	// std::cout << "tri_center: " << tri_mesh.get_center() << std::endl;
-	// std::cout << "tri_norm: " << tri_mesh.get_normal() << std::endl;
-	// std::cout << "res: " << resolution << std::endl;
-	// std::cout << "boundary clear: " << boundary_clearance << std::endl;
-
 	for(dReal proj_x = tri_mesh.get_min_proj_x(); proj_x < tri_mesh.get_max_proj_x(); proj_x += resolution) {
 		for(dReal proj_y = tri_mesh.get_min_proj_y(); proj_y < tri_mesh.get_max_proj_y(); proj_y += resolution) {
 			// std::cout << "x: " << proj_x << std::endl;
@@ -263,7 +257,7 @@ vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, dou
 			// Vector point = tri_mesh.get_transform() * curr_proj_point;
 			// call point_free_space
 
-			curr_proj_point.z = r - boundary_clearance;
+			curr_proj_point.z = r - boundary_clearance; // do this differently
 			contact_samples.push_back({curr_proj_point});
 
 			// TODO: add proj_xx and proj_yy
@@ -297,7 +291,7 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 							(tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y()) / 20.0);
 
 		vector<Vector> non_occupied_contact_samples = sample_points(*tri_mesh, density, boundary_clearance);
-		std::cout << "hey:! " << non_occupied_contact_samples.size() << std::endl;
+
 		while(non_occupied_contact_samples.size()) {
 			int rand_sample_ind = rand() % non_occupied_contact_samples.size();
 			Vector rand_contact = non_occupied_contact_samples[rand_sample_ind];
@@ -305,10 +299,18 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 			Vector center = tri_tf * rand_contact;
 			Vector normal = tri_mesh->get_normal() * -1;
 			dReal r = center.z;
-			// filter out based on radii
 
-			ret_regions.push_back({{center.x, center.y, 0}, tri_mesh->get_normal(), r});
-			non_occupied_contact_samples.erase(non_occupied_contact_samples.begin() + rand_sample_ind);
+			if(r > .01)
+				ret_regions.push_back({{center.x, center.y, 0}, tri_mesh->get_normal(), r});
+		
+			auto it = non_occupied_contact_samples.begin();
+			while (it != non_occupied_contact_samples.end()) {
+				if( pow(rand_contact.x - it->x, 2) + pow(rand_contact.y - it->y, 2) < pow(r, 2) ) {
+					it = non_occupied_contact_samples.erase(it);
+				} else {
+					++it;
+				}
+			}
 		}
 	}
 
