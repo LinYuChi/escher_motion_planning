@@ -83,7 +83,8 @@ void Environment_handler::update_environment() {
 	vector<pair<int, int> > start_tri_edges {
 		std::make_pair(0, 1),
 		std::make_pair(1, 2),
-		std::make_pair(2, 3)
+		std::make_pair(2, 3),
+		std::make_pair(3, 0)
 	};
 
 	vector<Vector> end_tri_vertices {
@@ -96,7 +97,8 @@ void Environment_handler::update_environment() {
 	vector<pair<int, int> > end_tri_edges {
 		std::make_pair(0, 1),
 		std::make_pair(1, 2),
-		std::make_pair(2, 3)
+		std::make_pair(2, 3),
+		std::make_pair(3, 0)
 	};
 
 	unique_ptr<Tri_mesh> start_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, start_tri_edges, start_tri_vertices});
@@ -123,10 +125,11 @@ void Environment_handler::update_environment() {
 	}
 
 	vector<Contact_region> crs = get_contact_regions();
-	// std::cout << crs.size() << std::endl;
-	// for(auto cr: crs) {
-	// 	std::cout << cr.position << std::endl;
-	// } do some drawing here
+	std::cout << crs.size() << std::endl;
+	for(const auto & cr: crs) {
+		// std::cout << cr.position.z << std::endl;
+		dh.DrawRegion(cr.position, cr.normal, cr.radius, 1);
+	}
 }
 
 // box world
@@ -241,7 +244,7 @@ vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, dou
 			Vector curr_proj_point{curr_proj.first, curr_proj.second, 0}; // flatten to two dimensions
 
 			// if(checked_samples.find(curr_proj) != checked_samples.end()) {
-				// continue; <- shouldn't be getting here?
+			// 	continue;// <- shouldn't be getting here?
 			// }
 
 			// checked_samples.insert(curr_proj);
@@ -249,13 +252,13 @@ vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, dou
 			if(!tri_mesh.inside_polygon_plane_frame(curr_proj_point)) {
 				continue;
 			}
-			// std::cout << "first break" << std::endl;
+
 			dReal r = tri_mesh.dist_to_boundary(curr_proj_point);
 
 			if(r <= boundary_clearance + clearance_error_c) {
 				continue;
 			}
-			// std::cout << "second break" << std::endl;
+
 			// check collision
 			// Vector point = tri_mesh.get_transform() * curr_proj_point;
 			// call point_free_space
@@ -294,7 +297,7 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 							(tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y()) / 20.0);
 
 		vector<Vector> non_occupied_contact_samples = sample_points(*tri_mesh, density, boundary_clearance);
-
+		std::cout << "hey:! " << non_occupied_contact_samples.size() << std::endl;
 		while(non_occupied_contact_samples.size()) {
 			int rand_sample_ind = rand() % non_occupied_contact_samples.size();
 			Vector rand_contact = non_occupied_contact_samples[rand_sample_ind];
@@ -304,9 +307,11 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 			dReal r = center.z;
 			// filter out based on radii
 
-			ret_regions.push_back({center, tri_mesh->get_normal(), r});
+			ret_regions.push_back({{center.x, center.y, 0}, tri_mesh->get_normal(), r});
 			non_occupied_contact_samples.erase(non_occupied_contact_samples.begin() + rand_sample_ind);
 		}
 	}
+
+	return ret_regions;
 }
 

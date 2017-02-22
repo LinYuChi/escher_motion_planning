@@ -89,11 +89,12 @@ public:
 };
 
 class Tri_mesh : public Structure {
+	// boundaries historically called "approx_boundary"
 	std::map<OpenRAVE::dReal, std::vector<OpenRAVE::dReal> > boundaries; // discretized mapping from x coord to y bounds
 	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> transform_matrix;
 	OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> inverse_transform_matrix;
 	std::vector<std::pair<int, int> > edges; // contains indices into vertices vector
-	std::vector<OpenRAVE::Vector> vertices;
+	std::vector<OpenRAVE::Vector> vertices; // historically called "boundaries"
 	std::vector<OpenRAVE::Vector> proj_vertices; // last vertex is same as first vertex, i.e. "closed loop"
 
 	OpenRAVE::dReal min_proj_x;

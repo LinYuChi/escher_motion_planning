@@ -273,7 +273,7 @@ void Tri_mesh::update_proj_vertices() {
 	}
 
 	if(proj_vertices.size()) { 
-		proj_vertices.push_back(proj_vertices[0]); // "close the loop"
+		proj_vertices.push_back(proj_vertices.front()); // "close the loop"
 	}
 }
 
@@ -309,6 +309,7 @@ void Tri_mesh::update_approx_boundary() {
 			sort(boundary_pair.second.begin(), boundary_pair.second.end());
 		}
 	}
+
 }
 
 /*** PUBLIC MEM FNS ***/
@@ -337,6 +338,7 @@ Tri_mesh::Tri_mesh(KinBodyPtr _kinbody, Vector plane_parameters,
 	transform_matrix.trans = get_center();
 	inverse_transform_matrix = transform_matrix.inverse();
 	update_proj_vertices();
+	update_approx_boundary();
 }
 
 TriMesh Tri_mesh::get_openrave_trimesh() const {
@@ -420,19 +422,18 @@ bool Tri_mesh::inside_polygon_plane_frame(const Vector & projected_point) const 
 		return false;
 	}
 
-	// std::cout << "proj x: " << projected_point.x << std::endl;
-	int query_x = floor(projected_point.x - min_proj_x) / surface_slice_resolution_c;
-	// std::cout << "query x: " << query_x << std::endl;
+	int query_x = (projected_point.x - min_proj_x) / surface_slice_resolution_c;
 	auto y_bounds_it = boundaries.find(query_x);
 
 	if(y_bounds_it == boundaries.end()) {
 		return false;
 	}
+
 	int pass_boundary_count = 0;
 
 	// considers points "on border" to be within the frame
 	auto bound_it = lower_bound(y_bounds_it->second.begin(), y_bounds_it->second.end(), projected_point.y);
-	return distance(bound_it, y_bounds_it->second.begin()) % 2 == 1;
+	return distance(y_bounds_it->second.begin(), bound_it) % 2 == 1;
 }
 
 // polygon must be convex. contacts are rectangles.

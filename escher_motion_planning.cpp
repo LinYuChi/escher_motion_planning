@@ -63,29 +63,27 @@ class EscherMotionPlanning : public ModuleBase
 
             GetEnv()->GetRobots(robots);
             SetActiveRobots(robot_name,robots);
-            // try {
-                // sout << "esch_mot_plan cpp env pointer: " << GetEnv() << "\n";
+            try {
                 // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
-            Environment_handler env_handler{GetEnv()};
-                // sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
-                //****************************************************************************//
+                Environment_handler env_handler{GetEnv()};
+                sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
+                // ****************************************************************************//
                 // Something about constructing environment objects. (walls, ground, and etc.)//
-                //****************************************************************************//
+                // ****************************************************************************//
 
                 // After loading all the parameters, environment object and robot objects, you can execute the main planning function.
 
-                //**************************//
-                //**************************//
+                // **************************//
+                // **************************//
                 // Something about planning //
-            // } catch(std::exception & e) {
-                // sout << "Exception caught: " << e.what() << "\n";
-            // }
+
+                int a;
+                std::cin>>a; // block
+            } catch(std::exception & e) {
+                sout << "Exception caught: " << e.what() << "\n";
+            }
 
             //return the result
-            sout << "Press any button to finish." << "\n";
-            int a;
-            std::cin>>a; // block
-
             return true;
         }
 
