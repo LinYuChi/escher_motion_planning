@@ -37,11 +37,13 @@ struct Motion_plan {
 };
 
 struct Motion_plan_cluster {
-	int representative_index;
-	std::vector<Motion_plan> plans;
+	int representative_index; // indexes into plan_indices vector
+	std::vector<int> plan_indices; // each value in vector indexes into motion_plans index in Motion_plan_library
 };
 
 class Motion_plan_library {
+	std::vector<Motion_plan> motion_plans;
+
 	// motion plan distance range -> motion plan clusters mapping
 	// map keys represent range [key, key + distance_delta)
 	std::map<OpenRAVE::dReal, std::vector<Motion_plan_cluster>> partitioned_clusters;
@@ -50,7 +52,8 @@ public:
 	void append_plan(const Motion_plan & plan);
 
 	// returns motion plans in order of most likely to fit environment
-	std::vector<Motion_plan> query(const std::vector<Contact_region> & contact_regions) const;
+	std::vector<Motion_plan_cluster> query(const std::vector<Contact_region> & contact_regions,
+								   const OpenRAVE::Vector & start, const OpenRAVE::Vector & goal) const;
 };
 
 #endif

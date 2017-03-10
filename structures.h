@@ -116,10 +116,6 @@ class Tri_mesh : public Structure {
 
 	OpenRAVE::dReal circumradius;
 
-	// euclidean distance btwn two points in a 2D coordinate system
-	OpenRAVE::dReal euclidean_distance_2d(const OpenRAVE::Vector & q, const OpenRAVE::Vector & p) const;
-	// euclidean distance btwn two points in a 3D coordinate system
-	OpenRAVE::dReal euclidean_distance_3d(const OpenRAVE::Vector & q, const OpenRAVE::Vector & p) const;
 	void update_center();
 	void update_proj_vertices();
 	void update_approx_boundary();

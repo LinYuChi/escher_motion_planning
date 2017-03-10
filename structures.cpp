@@ -228,17 +228,6 @@ General_box::General_box(KinBodyPtr _kinbody, dReal _x, dReal _y, dReal height, 
 
 /*** PRIVATE MEM FNS ***/
 
-
-// euclidean distance btwn two points in a 2D coordinate system
-dReal Tri_mesh::euclidean_distance_2d(const Vector & q, const Vector & p) const {
-	return sqrt(pow(q.x - p.x, 2) + pow(q.y - p.y, 2));
-}
-
-// euclidean distance btwn two points in a 3D coordinate system
-dReal Tri_mesh::euclidean_distance_3d(const Vector & q, const Vector & p) const {
-	return sqrt(pow(q.x - p.x, 2) + pow(q.y - p.y, 2) + pow(q.z - p.z, 2));
-}
-
 void Tri_mesh::update_center() {
 	circumradius = 0;
 	for(int i = 0; i < vertices.size() - 1; ++i) {

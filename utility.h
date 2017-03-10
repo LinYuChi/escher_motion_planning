@@ -17,6 +17,11 @@ struct RPY_tf {
 	OpenRAVE::dReal yaw; // degrees
 };
 
+// euclidean distance btwn two points in a 2D coordinate system
+OpenRAVE::dReal euclidean_distance_2d(const OpenRAVE::Vector & q, const OpenRAVE::Vector & p);
+// euclidean distance btwn two points in a 3D coordinate system
+OpenRAVE::dReal euclidean_distance_3d(const OpenRAVE::Vector & q, const OpenRAVE::Vector & p);
+
 OpenRAVE::RaveTransformMatrix<OpenRAVE::dReal> get_SO3(const RPY_tf & extremity);
 
 #endif

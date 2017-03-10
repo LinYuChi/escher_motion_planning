@@ -284,8 +284,7 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 		// do fragment checking
 
 		RaveTransformMatrix<dReal> tri_tf = tri_mesh->get_transform();
-
-		dReal boundary_clearance = sqrt(pow(hand_height_c / 2, 2) + pow(hand_width_c / 2, 2)); // move euclidean distance functions to utility
+		dReal boundary_clearance = sqrt(pow(hand_height_c / 2, 2) + pow(hand_width_c / 2, 2));
 		// move hand_width_c etc. const globals to one place?
 		dReal density = min((tri_mesh->get_max_proj_x() - tri_mesh->get_min_proj_x()) / 20.0,
 							(tri_mesh->get_max_proj_y() - tri_mesh->get_min_proj_y()) / 20.0);

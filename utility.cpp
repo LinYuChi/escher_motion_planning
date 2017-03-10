@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-using OpenRAVE::dReal; using OpenRAVE::RaveTransformMatrix;
+using OpenRAVE::dReal; using OpenRAVE::RaveTransformMatrix; using OpenRAVE::Vector;
 using std::vector;
 using std::cos; using std::sin;
 
@@ -10,6 +10,16 @@ const OpenRAVE::dReal foot_height_c = 0.25;
 const OpenRAVE::dReal foot_width_c = 0.135;
 const OpenRAVE::dReal hand_height_c = 0.20;
 const OpenRAVE::dReal hand_width_c = 0.14;
+
+// euclidean distance btwn two points in a 2D coordinate system
+dReal euclidean_distance_2d(const Vector & q, const Vector & p) {
+	return sqrt(pow(q.x - p.x, 2) + pow(q.y - p.y, 2));
+}
+
+// euclidean distance btwn two points in a 3D coordinate system
+dReal euclidean_distance_3d(const Vector & q, const Vector & p) {
+	return sqrt(pow(q.x - p.x, 2) + pow(q.y - p.y, 2) + pow(q.z - p.z, 2));
+}
 
 RaveTransformMatrix<dReal> get_SO3(const RPY_tf & e) {
 	double roll_in_rad = e.roll * (M_PI / 180);
