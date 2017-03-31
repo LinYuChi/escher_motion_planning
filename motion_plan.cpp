@@ -30,6 +30,10 @@ vector<Motion_plan_cluster> Motion_plan_library::query(const vector<Contact_regi
 
 		for(int i = 0; i < num_jacobian_iter_c; ++i) {
 			// compute jacobian
+			// J = ;
+			for(const Contact_region & cr : contact_regions) {
+
+			}
 
 			// compute J+ (pseudo inverse)
 
