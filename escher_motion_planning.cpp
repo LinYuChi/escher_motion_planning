@@ -1,8 +1,12 @@
 #include <openrave/plugin.h>
 #include <boost/bind.hpp>
 #include "environment_handler.h"
+#include "motion_plan.h"
 #include <iostream>
+
 using namespace OpenRAVE;
+using std::vector;
+using std::string;
 
 class EscherMotionPlanning : public ModuleBase
 {
@@ -15,9 +19,9 @@ class EscherMotionPlanning : public ModuleBase
         
         bool Planning(std::ostream& sout, std::istream& sinput)
         {
-            std::string robot_name;
+            string robot_name;
 
-            std::string param;
+            string param;
 
             while(!sinput.eof())
             {
@@ -57,7 +61,7 @@ class EscherMotionPlanning : public ModuleBase
 
             }
 
-            std::vector<RobotBasePtr> robots;
+            vector<RobotBasePtr> robots;
 
             _penv = GetEnv();
 
@@ -76,7 +80,20 @@ class EscherMotionPlanning : public ModuleBase
                 // **************************//
                 // **************************//
                 // Something about planning //
-
+                Motion_plan_library mpl;
+                vector<Contact> last_plan {
+                    {{0, -0.15, 0}, Manip::L_foot},
+                    {{0, 0.15, 0}, Manip::R_foot},
+                    {{.15, -0.15, 0}, Manip::L_foot},
+                    {{.3, 0.15, 0}, Manip::R_foot},
+                    {{.45, -0.15, 0}, Manip::L_foot},
+                    {{.6, 0.15, 0}, Manip::R_foot},
+                    {{.75, -0.15, 0}, Manip::L_foot},
+                    {{.75, 0.15, 0}, Manip::R_foot},
+                };
+                mpl.learn(last_plan);
+                mpl.query({},{0,0,0},{1,1,1});
+                
                 int a;
                 std::cin>>a; // block
             } catch(std::exception & e) {
@@ -88,23 +105,23 @@ class EscherMotionPlanning : public ModuleBase
         }
 
     private:
-        void SetActiveRobots(std::string robot_name, const std::vector<RobotBasePtr >& robots);
+        void SetActiveRobots(string robot_name, const vector<RobotBasePtr >& robots);
 
         OpenRAVE::RobotBasePtr _probot; // Robot object using in the plugin
         OpenRAVE::EnvironmentBasePtr _penv; // Environment object using in the plugin
-        std::vector<double>_goal; // Goal coordinate for the planning. [x,y,theta]
+        vector<double>_goal; // Goal coordinate for the planning. [x,y,theta]
         bool _is_parallel = false; // a flag to turn or off parallelization. (just for example)
 };
 
 
-void EscherMotionPlanning::SetActiveRobots(std::string robot_name, const std::vector<RobotBasePtr>& robots)
+void EscherMotionPlanning::SetActiveRobots(string robot_name, const vector<RobotBasePtr>& robots)
 {
     if( robots.size() == 0 ) {
         RAVELOG_WARNA("No robots to plan for\n");
         return;
     }
 
-    for(std::vector<RobotBasePtr>::const_iterator it = robots.begin(); it != robots.end(); it++)
+    for(vector<RobotBasePtr>::const_iterator it = robots.begin(); it != robots.end(); it++)
     {
         if( strcmp((*it)->GetName().c_str(), robot_name.c_str() ) == 0  ) {
             _probot = *it;
@@ -120,7 +137,7 @@ void EscherMotionPlanning::SetActiveRobots(std::string robot_name, const std::ve
 }
 
 // called to create a new plugin
-InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const std::string& interfacename, std::istream& sinput, EnvironmentBasePtr penv)
+InterfaceBasePtr CreateInterfaceValidated(InterfaceType type, const string& interfacename, std::istream& sinput, EnvironmentBasePtr penv)
 {
     if( type == PT_Module && interfacename == "eschermotionplanning" ) {
         return InterfaceBasePtr(new EscherMotionPlanning(penv,sinput));

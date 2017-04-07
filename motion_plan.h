@@ -23,7 +23,7 @@ enum class Manip {
 };
 
 struct Contact {
-	RPY_tf transform;
+	RPY_tf tf;
 	Manip manip;
 };
 
@@ -54,6 +54,7 @@ public:
 	// returns motion plans in order of most likely to fit environment
 	std::vector<Motion_plan_cluster> query(const std::vector<Contact_region> & contact_regions,
 								   const OpenRAVE::Vector & start, const OpenRAVE::Vector & goal) const;
+	void learn(std::vector<Contact> contact_sequence);
 };
 
 #endif

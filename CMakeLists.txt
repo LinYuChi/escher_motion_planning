@@ -1,6 +1,9 @@
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 cmake_minimum_required (VERSION 2.6.0)
 project(escher_motion_planning)
 find_package(OpenRAVE 0.9 REQUIRED)
+find_package(GUROBI REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -11,7 +14,7 @@ endif( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX )
 # optional in case boost is used
 find_package(Boost ${OpenRAVE_Boost_VERSION} EXACT)
 
-include_directories(${OpenRAVE_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(${OpenRAVE_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${GUROBI_INCLUDE_DIRS})
 link_directories(${OpenRAVE_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
 add_library(escher_motion_planning SHARED escher_motion_planning.cpp)
 add_library(structures SHARED structures.cpp)
@@ -22,7 +25,8 @@ add_library(utility SHARED utility.cpp)
 add_library(query SHARED query.cpp)
 add_library(drawing SHARED drawing.cpp)
 set_target_properties(escher_motion_planning PROPERTIES COMPILE_FLAGS "${OpenRAVE_CXX_FLAGS}" LINK_FLAGS "${OpenRAVE_LINK_FLAGS}")
-target_link_libraries(escher_motion_planning environment_handler utility ${OpenRAVE_LIBRARIES})
+target_link_libraries(escher_motion_planning environment_handler utility motion_plan ${OpenRAVE_LIBRARIES})
 target_link_libraries(drawing contact_space_planner structures ${OpenRAVE_LIBRARIES})
 target_link_libraries(environment_handler structures drawing utility ${OpenRAVE_LIBRARIES})
+target_link_libraries(motion_plan ${GUROBI_LIBRARIES})
 install(TARGETS escher_motion_planning DESTINATION .)
