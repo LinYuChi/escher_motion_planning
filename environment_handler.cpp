@@ -124,11 +124,11 @@ void Environment_handler::update_environment() {
 		penv->Add(tri_mesh->get_kinbody());
 	}
 
-	vector<Contact_region> crs = get_contact_regions();
-	for(const auto & cr: crs) {
-		// std::cout << cr.position.z << std::endl;
-		dh.DrawRegion(cr.position, cr.normal, cr.radius, 1);
-	}
+	// vector<Contact_region> crs = get_contact_regions();
+	// for(const auto & cr: crs) {
+	// 	// std::cout << cr.position.z << std::endl;
+	// 	dh.DrawRegion(cr.position, cr.normal, cr.radius, 1);
+	// }
 }
 
 // box world

@@ -3,10 +3,13 @@
 #include "environment_handler.h"
 #include "motion_plan.h"
 #include <iostream>
+#include <unistd.h>
+
 
 using namespace OpenRAVE;
 using std::vector;
 using std::string;
+using std::cout; using std::endl;
 
 class EscherMotionPlanning : public ModuleBase
 {
@@ -70,7 +73,7 @@ class EscherMotionPlanning : public ModuleBase
             try {
                 // Construct the environment objects. (See KinBody in OpenRAVE API, and env_handler.py) 
                 Environment_handler env_handler{GetEnv()};
-                sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
+                // sout << "Nearest boundary: " << env_handler.dist_to_boundary(0, 0, 0) << "\n";
                 // ****************************************************************************//
                 // Something about constructing environment objects. (walls, ground, and etc.)//
                 // ****************************************************************************//
@@ -91,6 +94,39 @@ class EscherMotionPlanning : public ModuleBase
                     {{.75, -0.15, 0}, Manip::L_foot},
                     {{.75, 0.15, 0}, Manip::R_foot},
                 };
+
+                vector<dReal> s{
+                    // 0, 0, 1.15, 1.3, .3, .3, .3, .3
+                    0, 0, .15, .3, .3, .3, .3, .15
+                };
+
+                for(size_t m = 0; m < 100; ++m) {
+                    Drawing_handler dh{GetEnv()};
+
+
+                    if(m < 50) {
+                        s[2] += .01;
+                        s[3] = s[2] + .15;
+                    } else if(m < 100) {
+                        s[3] += .01;
+                        s[4] = s[3] + .30;
+                    }
+
+                    // s[n] = ;
+
+                    // s[2] = .01 * m;
+                    // s[3] = s[2] + .15;
+                    vector<Contact> t_plan = mpl.transform_plan(last_plan, 0, 0, 0, 0, s);
+                    cout << "---------------" << endl;
+                    cout << t_plan.size() << endl;
+                    for(size_t i = 0; i < t_plan.size(); ++i) {
+                        dh.DrawRegion({t_plan[i].tf.x, t_plan[i].tf.y, t_plan[i].tf.z}, {0, 0, 1}, 0.05, 1);
+                        cout << "x: " << t_plan[i].tf.x << " y: " << t_plan[i].tf.y << " z: " << t_plan[i].tf.z << endl;
+                    }
+                    cout << "---------------" << endl;
+                    usleep(100000);
+                }
+
                 mpl.learn(last_plan);
                 mpl.query({},{0,0,0},{1,1,1});
                 

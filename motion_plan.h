@@ -44,10 +44,15 @@ struct Motion_plan_cluster {
 class Motion_plan_library {
 	std::vector<Motion_plan> motion_plans;
 
+
+
 	// motion plan distance range -> motion plan clusters mapping
 	// map keys represent range [key, key + distance_delta)
 	std::map<OpenRAVE::dReal, std::vector<Motion_plan_cluster>> partitioned_clusters;
 public:
+	std::vector<Contact> transform_plan(const std::vector<Contact> & c_seq, OpenRAVE::dReal x_mp,
+										OpenRAVE::dReal y_mp, OpenRAVE::dReal z_mp, OpenRAVE::dReal theta_mp,
+										const std::vector<OpenRAVE::dReal> & s);
 	// append motion plan to library, updating clusters as necessary
 	void append_plan(const Motion_plan & plan);
 
