@@ -45,24 +45,31 @@ const Contact & get_pivot_contact(const vector<Contact> c_seq, int i) {
 	throw std::runtime_error{"Error finding pivot contact"};
 }
 
-// distance between a contact pose and a contact region
-dReal contact_pose_to_region_distance(const Contact_region & cr, const Contact & pose) {
-	return 0.;
-}
+// TODO: distance between a contact pose and a contact region
+// dReal contact_pose_to_region_distance(const Contact_region & cr, const Contact & pose) {
+	// return 0.;
+// }
 
-// distance between a contact pose and a contact region
-dReal contact_pose_to_region_orientation(const Contact_region & cr, const Contact & pose) {
-	return 0.;
-}
+// TODO: distance between a contact pose and a contact region
+// dReal contact_pose_to_region_orientation(const Contact_region & cr, const Contact & pose) {
+	// return 0.;
+// }
 
 
 Vector get_attractive_vector(const vector<Contact_region> & contact_regions, Contact & contact) {
 	assert(contact_regions.size());
 
+	Vector contact_pos {contact.tf.x, contact.tf.y, contact.tf.z};
+
 	Vector attractive_vec;
 	double nearest_contact_dist = numeric_limits<double>::max();
 	for(const Contact_region & cr : contact_regions) {
 		// distance between contact and contact region
+		dReal contact_to_region_dist = euclidean_distance_3d(contact_pos, cr.position);
+		if(contact_to_region_dist < nearest_contact_dist) {
+			nearest_contact_dist = contact_to_region_dist;
+			attractive_vec = cr.position - contact_pos;
+		}
 	}
 
 	return attractive_vec;
@@ -71,7 +78,7 @@ Vector get_attractive_vector(const vector<Contact_region> & contact_regions, Con
 // can make this more efficient based on usage
 // accounts for acyclic motion
 vector<Contact> Motion_plan_library::transform_plan(const vector<Contact> & c_seq, dReal x_mp, dReal y_mp,
-													dReal z_mp, dReal theta_mp, const vector<Vector> & s) {
+													dReal z_mp, dReal theta_mp, const vector<Vector> & s) const {
 	assert(s.size() == c_seq.size());
 	
 	vector<Contact> transformed_plan = c_seq;
@@ -121,6 +128,22 @@ vector<Contact> Motion_plan_library::transform_plan(const vector<Contact> & c_se
 	return transformed_plan;
 }
 
+struct Mp_optimization_vars {
+	dReal x_mp;
+	dReal y_mp;
+	dReal z_mp;
+	dReal theta_mp;
+	vector<dReal> s_x;
+	vector<dReal> s_y;
+	vector<dReal> s_z;
+};
+
+Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const vector<Vector> & attractive_vecs) {
+    GRBEnv env = GRBEnv();
+
+    GRBModel model = GRBModel(env);
+}
+
 vector<Motion_plan_cluster> Motion_plan_library::query(const vector<Contact_region> & contact_regions,
 											   const Vector & start, const Vector & goal) const {
 	
@@ -145,28 +168,29 @@ vector<Motion_plan_cluster> Motion_plan_library::query(const vector<Contact_regi
 
 		vector<Contact> global_c_seq = cluster_rep.contact_sequence;
 		
-		dReal x_mp = 0;
-		dReal y_mp = 0;
-		dReal z_mp = 0;
-		dReal theta_mp = 0;
 
-		vector<dReal> s_x(local_c_seq.size());
-		vector<dReal> s_y(local_c_seq.size());
-		vector<dReal> s_z(local_c_seq.size());
+		Mp_optimization_vars mp_optim;
+		mp_optim.x_mp = 0;
+		mp_optim.y_mp = 0;
+		mp_optim.z_mp = 0;
+		mp_optim.theta_mp = 0;
+		mp_optim.s_x.resize(local_c_seq.size());
+		mp_optim.s_y.resize(local_c_seq.size());
+		mp_optim.s_z.resize(local_c_seq.size());
 
 		// initialize delta stretch vectors
 		// cannot stretch first contact pose
-		s_x[0] = 0;
-		s_y[0] = 0;
-		s_z[0] = 0;
+		mp_optim.s_x[0] = 0;
+		mp_optim.s_y[0] = 0;
+		mp_optim.s_z[0] = 0;
 		for(int i = 1; i < local_c_seq.size(); ++i) {
 			const Contact & curr_contact = local_c_seq[i];
 
 			try {
 				const Contact & pivot_contact = get_pivot_contact(local_c_seq, i);
-				s_x[i] = curr_contact.tf.x - pivot_contact.tf.x;
-				s_y[i] = curr_contact.tf.y - pivot_contact.tf.y;
-				s_z[i] = curr_contact.tf.z - pivot_contact.tf.z;
+				mp_optim.s_x[i] = curr_contact.tf.x - pivot_contact.tf.x;
+				mp_optim.s_y[i] = curr_contact.tf.y - pivot_contact.tf.y;
+				mp_optim.s_z[i] = curr_contact.tf.z - pivot_contact.tf.z;
 			} catch(...) {}
 
 		}
@@ -180,8 +204,8 @@ vector<Motion_plan_cluster> Motion_plan_library::query(const vector<Contact_regi
 			for(int j = 0; j < global_c_seq.size(); ++j) {
 				Contact global_contact = global_c_seq[j];
 
-				dReal r = euclidean_distance_2d({x_mp, y_mp, 0}, {global_contact.tf.x, global_contact.tf.y, 0});
-				dReal theta = atan2(global_contact.tf.y - y_mp, global_contact.tf.x - x_mp);
+				dReal r = euclidean_distance_2d({mp_optim.x_mp, mp_optim.y_mp, 0}, {global_contact.tf.x, global_contact.tf.y, 0});
+				dReal theta = atan2(global_contact.tf.y - mp_optim.y_mp, global_contact.tf.x - mp_optim.x_mp);
 
 				// x = rcos(theta) ==> -rsin(theta)
 				theta_mp_x_pd[j] = -r*sin(theta);
@@ -193,15 +217,31 @@ vector<Motion_plan_cluster> Motion_plan_library::query(const vector<Contact_regi
 			// calculate attractive vectors for each contact pose
 			vector<Vector> attractive_vecs(global_c_seq.size());
 			for(int i = 0; i < global_c_seq.size(); ++i) {
-
 				attractive_vecs[i] = get_attractive_vector(contact_regions, global_c_seq[i]);
 			}
 
 			// optimize motion plan variables
-
-			// compute change in contact poses
+			Mp_optimization_vars optimization_deltas = optimize_plan(global_c_seq, attractive_vecs);
 
 			// apply changes, move small step
+			mp_optim.x_mp += optimization_deltas.x_mp;
+			mp_optim.y_mp += optimization_deltas.y_mp;
+			mp_optim.z_mp += optimization_deltas.z_mp;
+			mp_optim.theta_mp += optimization_deltas.theta_mp;
+			for(int i = 0; i < local_c_seq.size(); ++i) {
+				mp_optim.s_x[i] += optimization_deltas.s_x[i];
+				mp_optim.s_y[i] += optimization_deltas.s_y[i];
+				mp_optim.s_z[i] += optimization_deltas.s_z[i];
+			}
+
+			// re-calculate global contact sequence
+
+			// concatenate together stretch vars
+			vector<Vector> s(local_c_seq.size());
+			for(int i = 0; i < local_c_seq.size(); ++i) {
+				s[i] = {mp_optim.s_x[i], mp_optim.s_y[i], mp_optim.s_z[i]};
+			}
+			global_c_seq = transform_plan(local_c_seq, mp_optim.x_mp, mp_optim.y_mp, mp_optim.z_mp, mp_optim.theta_mp, s);
 		}
 	}
 
