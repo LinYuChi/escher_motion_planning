@@ -95,27 +95,16 @@ class EscherMotionPlanning : public ModuleBase
                     {{.75, 0.15, 0}, Manip::R_foot},
                 };
 
-                vector<dReal> s{
+                vector<Vector> s{
                     // 0, 0, 1.15, 1.3, .3, .3, .3, .3
-                    0, 0, .15, .3, .3, .3, .3, .15
+                    {}, {0, .3, 0}, {.15, -0.3, 0}, {.45, .3, 0}, {.15, -.3, 0}, {.15, .3, 0}, {.15, -.3, 0}, {0, .3, 0}
                 };
 
-                for(size_t m = 0; m < 100; ++m) {
+                for(size_t m = 2; m < 8; ++m) {
                     Drawing_handler dh{GetEnv()};
 
+                    s[m] = s[m] * 1.1;
 
-                    if(m < 50) {
-                        s[2] += .01;
-                        s[3] = s[2] + .15;
-                    } else if(m < 100) {
-                        s[3] += .01;
-                        s[4] = s[3] + .30;
-                    }
-
-                    // s[n] = ;
-
-                    // s[2] = .01 * m;
-                    // s[3] = s[2] + .15;
                     vector<Contact> t_plan = mpl.transform_plan(last_plan, 0, 0, 0, 0, s);
                     cout << "---------------" << endl;
                     cout << t_plan.size() << endl;
@@ -124,7 +113,7 @@ class EscherMotionPlanning : public ModuleBase
                         cout << "x: " << t_plan[i].tf.x << " y: " << t_plan[i].tf.y << " z: " << t_plan[i].tf.z << endl;
                     }
                     cout << "---------------" << endl;
-                    usleep(100000);
+                    usleep(1000000);
                 }
 
                 mpl.learn(last_plan);

@@ -15,7 +15,7 @@ struct Contact_region {
 	int group; // the robot can slide between contacts of the same group
 };
 
-enum class Manip {
+enum Manip {
 	L_foot,
 	R_foot,
 	L_hand,
@@ -52,7 +52,7 @@ class Motion_plan_library {
 public:
 	std::vector<Contact> transform_plan(const std::vector<Contact> & c_seq, OpenRAVE::dReal x_mp,
 										OpenRAVE::dReal y_mp, OpenRAVE::dReal z_mp, OpenRAVE::dReal theta_mp,
-										const std::vector<OpenRAVE::dReal> & s);
+										const std::vector<OpenRAVE::Vector> & s);
 	// append motion plan to library, updating clusters as necessary
 	void append_plan(const Motion_plan & plan);
 
