@@ -17,7 +17,7 @@ class Drawing_handler{
 	std::vector< OpenRAVE::RaveVector<OpenRAVE::dReal> > hand_corners;
 public:
 	Drawing_handler(OpenRAVE::EnvironmentBasePtr _penv);
-	void clear_handler();
+	void ClearHandler();
 	void DrawBodyPath(Node* current); // Draw the upperbody path in thr door planning, postpone this implementation.(DrawPaths)
 	void DrawGridPath(); // Draw the Dijkstra grid path, postpone implementation.
 	void DrawContactPath(Node* current); // Draw the contact path given the final state(DrawStances)

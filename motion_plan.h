@@ -8,6 +8,8 @@
 #include <string>
 #include <map>
 
+class Drawing_handler;
+
 struct Contact_region {
 	OpenRAVE::Vector position; // region center
 	OpenRAVE::Vector normal; // unit normal vector
@@ -32,8 +34,7 @@ struct Motion_plan {
 	std::vector<Contact> contact_sequence;
 	std::vector<Node> contact_plan; // each node differs from previous node by one contact pose
 	std::string trajectory_filepath; // path to openrave file
-	OpenRAVE::dReal plan_travel_dist; // dist between motion plan start and goal
-	// planning_time, use chrono library?
+	OpenRAVE::dReal plan_travel_dist; // start-goal dist.
 };
 
 struct Motion_plan_cluster {
@@ -44,7 +45,22 @@ struct Motion_plan_cluster {
 class Motion_plan_library {
 	std::vector<Motion_plan> motion_plans;
 
-
+	Motion_plan cluster_rep = {
+		{},
+		{
+	        {{0, -0.15, 0}, Manip::L_foot},
+	        {{0, 0.15, 0}, Manip::R_foot},
+	        {{.15, -0.15, 0}, Manip::L_foot},
+	        {{.3, 0.15, 0}, Manip::R_foot},
+	        {{.45, -0.15, 0}, Manip::L_foot},
+	        {{.6, 0.15, 0}, Manip::R_foot},
+	        {{.75, -0.15, 0}, Manip::L_foot},
+	        {{.75, 0.15, 0}, Manip::R_foot}
+		},
+		{},
+		"",
+		0
+	};
 
 	// motion plan distance range -> motion plan clusters mapping
 	// map keys represent range [key, key + distance_delta)
@@ -57,7 +73,7 @@ public:
 	void append_plan(const Motion_plan & plan);
 
 	// returns motion plans in order of most likely to fit environment
-	std::vector<Motion_plan_cluster> query(const std::vector<Contact_region> & contact_regions,
+	void query(Drawing_handler & dh, const std::vector<Contact_region> & contact_regions,
 								   const OpenRAVE::Vector & start, const OpenRAVE::Vector & goal) const;
 	void learn(std::vector<Contact> contact_sequence);
 };

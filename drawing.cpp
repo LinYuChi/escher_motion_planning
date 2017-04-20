@@ -34,7 +34,7 @@ Drawing_handler::Drawing_handler(EnvironmentBasePtr _penv):penv(_penv)
 	hand_corners[3] = RaveVector<dReal>(-0.01,hand_height_c/2,-hand_width_c/2);
 }
 
-void Drawing_handler::clear_handler()
+void Drawing_handler::ClearHandler()
 {
 	graphptrs.clear();
 }

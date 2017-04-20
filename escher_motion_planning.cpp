@@ -100,24 +100,24 @@ class EscherMotionPlanning : public ModuleBase
                     {}, {0, .3, 0}, {.15, -0.3, 0}, {.45, .3, 0}, {.15, -.3, 0}, {.15, .3, 0}, {.15, -.3, 0}, {0, .3, 0}
                 };
 
-                for(size_t m = 2; m < 8; ++m) {
-                    Drawing_handler dh{GetEnv()};
+                // for(size_t m = 2; m < 8; ++m) {
+                Drawing_handler dh{GetEnv()};
 
-                    s[m] = s[m] * 1.1;
+                //     s[m] = s[m] * 1.1;
 
-                    vector<Contact> t_plan = mpl.transform_plan(last_plan, 0, 0, 0, 0, s);
-                    cout << "---------------" << endl;
-                    cout << t_plan.size() << endl;
-                    for(size_t i = 0; i < t_plan.size(); ++i) {
-                        dh.DrawRegion({t_plan[i].tf.x, t_plan[i].tf.y, t_plan[i].tf.z}, {0, 0, 1}, 0.05, 1);
-                        cout << "x: " << t_plan[i].tf.x << " y: " << t_plan[i].tf.y << " z: " << t_plan[i].tf.z << endl;
-                    }
-                    cout << "---------------" << endl;
-                    usleep(1000000);
-                }
+                //     vector<Contact> t_plan = mpl.transform_plan(last_plan, 0, 0, 0, 0, s);
+                //     cout << "---------------" << endl;
+                //     cout << t_plan.size() << endl;
+                //     for(size_t i = 0; i < t_plan.size(); ++i) {
+                //         dh.DrawRegion({t_plan[i].tf.x, t_plan[i].tf.y, t_plan[i].tf.z}, {0, 0, 1}, 0.05, 1);
+                //         cout << "x: " << t_plan[i].tf.x << " y: " << t_plan[i].tf.y << " z: " << t_plan[i].tf.z << endl;
+                //     }
+                //     cout << "---------------" << endl;
+                //     usleep(1000000);
+                // }
 
-                mpl.learn(last_plan);
-                mpl.query({},{0,0,0},{1,1,1});
+                // mpl.learn(last_plan);
+                mpl.query(dh, env_handler.get_contact_regions(),{},{});
                 
                 int a;
                 std::cin>>a; // block

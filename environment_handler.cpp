@@ -88,10 +88,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> end_tri_vertices {
-		{5.5, 0.5, -.005},
-		{4.5, 0.5, -.005},
-		{4.5, -0.5, -.005},
-		{5.5, -0.5, -.005}
+		{2, 0.5, -.005},
+		{1, 0.5, -.005},
+		{1, -0.5, -.005},
+		{2, -0.5, -.005}
 	};
 
 	vector<pair<int, int> > end_tri_edges {

@@ -28,5 +28,5 @@ set_target_properties(escher_motion_planning PROPERTIES COMPILE_FLAGS "${OpenRAV
 target_link_libraries(escher_motion_planning environment_handler utility motion_plan ${OpenRAVE_LIBRARIES})
 target_link_libraries(drawing contact_space_planner structures ${OpenRAVE_LIBRARIES})
 target_link_libraries(environment_handler structures drawing utility ${OpenRAVE_LIBRARIES})
-target_link_libraries(motion_plan ${GUROBI_LIBRARIES})
+target_link_libraries(motion_plan drawing ${GUROBI_LIBRARIES})
 install(TARGETS escher_motion_planning DESTINATION .)
