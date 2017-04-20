@@ -164,6 +164,17 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    	delta_s_z[i] = model.addVar(-100.0, 100.0, 0.0, GRB_CONTINUOUS, "delta_s_z_of_" + i);
 	    }
 
+	    // set constraints
+	    for(int i = 0; i < global_c_seq.size(); ++i) {
+	    	model.addConstr((mp_vars.s_x[i] + delta_s_x[i]) <= 10000);
+	    	model.addConstr((mp_vars.s_y[i] + delta_s_y[i]) <= 10000);
+	    	model.addConstr((mp_vars.s_z[i] + delta_s_z[i]) <= 10000);
+
+	    	// model.addConstr((mp_vars.s_x[i] + delta_s_x[i]) >= 0.01);
+	    	// model.addConstr((mp_vars.s_y[i] + delta_s_y[i]) >= 0.01);
+	    	// model.addConstr((mp_vars.s_z[i] + delta_s_z[i]) >= 0.01);
+	    }
+
 	    // set objective
 	    GRBQuadExpr obj;
 
@@ -344,16 +355,16 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 	}
 	// }
 	
-	// std::cout << "x_mp: " << mp_optim.x_mp << std::endl;
-	// std::cout << "y_mp: " << mp_optim.y_mp << std::endl;
-	// std::cout << "z_mp: " << mp_optim.z_mp << std::endl;
-	// std::cout << "theta_mp: " << mp_optim.theta_mp << std::endl;
-	// for(int i = 0; i < mp_optim.s_x.size(); ++i) {
-	// 	std::cout << "s_x[" << i << "]: " << mp_optim.s_x[i] << " ";
-	// 	std::cout << "s_y[" << i << "]: " << mp_optim.s_y[i] << " ";
-	// 	std::cout << "s_z[" << i << "]: " << mp_optim.s_z[i] << " ";
-	// 	std::cout << std::endl;
-	// }
+	std::cout << "x_mp: " << mp_optim.x_mp << std::endl;
+	std::cout << "y_mp: " << mp_optim.y_mp << std::endl;
+	std::cout << "z_mp: " << mp_optim.z_mp << std::endl;
+	std::cout << "theta_mp: " << mp_optim.theta_mp << std::endl;
+	for(int i = 0; i < mp_optim.s_x.size(); ++i) {
+		std::cout << "s_x[" << i << "]: " << mp_optim.s_x[i] << " ";
+		std::cout << "s_y[" << i << "]: " << mp_optim.s_y[i] << " ";
+		std::cout << "s_z[" << i << "]: " << mp_optim.s_z[i] << " ";
+		std::cout << std::endl;
+	}
 }
 
 void Motion_plan_library::learn(vector<Contact> contact_sequence) {
