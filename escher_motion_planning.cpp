@@ -4,12 +4,14 @@
 #include "motion_plan.h"
 #include <iostream>
 #include <unistd.h>
+#include <sstream>
 
 
 using namespace OpenRAVE;
 using std::vector;
 using std::string;
 using std::cout; using std::endl;
+using std::stringstream;
 
 class EscherMotionPlanning : public ModuleBase
 {
@@ -83,38 +85,9 @@ class EscherMotionPlanning : public ModuleBase
                 // **************************//
                 // **************************//
                 // Something about planning //
+
                 Motion_plan_library mpl;
-                vector<Contact> last_plan {
-                    {{0, -0.15, 0}, Manip::L_foot},
-                    {{0, 0.15, 0}, Manip::R_foot},
-                    {{.15, -0.15, 0}, Manip::L_foot},
-                    {{.3, 0.15, 0}, Manip::R_foot},
-                    {{.45, -0.15, 0}, Manip::L_foot},
-                    {{.6, 0.15, 0}, Manip::R_foot},
-                    {{.75, -0.15, 0}, Manip::L_foot},
-                    {{.75, 0.15, 0}, Manip::R_foot},
-                };
-
-                vector<Vector> s{
-                    // 0, 0, 1.15, 1.3, .3, .3, .3, .3
-                    {}, {0, .3, 0}, {.15, -0.3, 0}, {.45, .3, 0}, {.15, -.3, 0}, {.15, .3, 0}, {.15, -.3, 0}, {0, .3, 0}
-                };
-
-                // for(size_t m = 2; m < 8; ++m) {
                 Drawing_handler dh{GetEnv()};
-
-                //     s[m] = s[m] * 1.1;
-
-                //     vector<Contact> t_plan = mpl.transform_plan(last_plan, 0, 0, 0, 0, s);
-                //     cout << "---------------" << endl;
-                //     cout << t_plan.size() << endl;
-                //     for(size_t i = 0; i < t_plan.size(); ++i) {
-                //         dh.DrawRegion({t_plan[i].tf.x, t_plan[i].tf.y, t_plan[i].tf.z}, {0, 0, 1}, 0.05, 1);
-                //         cout << "x: " << t_plan[i].tf.x << " y: " << t_plan[i].tf.y << " z: " << t_plan[i].tf.z << endl;
-                //     }
-                //     cout << "---------------" << endl;
-                //     usleep(1000000);
-                // }
 
                 // mpl.learn(last_plan);
                 mpl.query(dh, env_handler.get_contact_regions(),{},{});

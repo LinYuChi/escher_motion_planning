@@ -4,6 +4,7 @@ import openravepy as rave
 import time
 import sys
 import numpy as np
+import scipy
 
 def load_robot(env, urdf_path=None, srdf_path=None):
     if(not urdf_path):

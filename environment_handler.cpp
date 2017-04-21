@@ -21,7 +21,6 @@ using std::unique_ptr; using std::move;
 const double error_c = .001;
 const double clearance_error_c = .01;
 
-
 const OpenRAVE::dReal foot_height_c = 0.25;
 const OpenRAVE::dReal foot_width_c = 0.135;
 const OpenRAVE::dReal hand_height_c = 0.20;
@@ -74,10 +73,10 @@ void Environment_handler::update_environment() {
 	unique_ptr<Box> b2 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
 
 	vector<Vector> start_tri_vertices {
-		{0.5, 0.5, -.005},
-		{-0.5, 0.5, -.005},
-		{-0.5, -0.5, -.005},
-		{0.5, -0.5, -.005}
+		{1, 0.5, -.005},
+		{0, 0.5, -.005},
+		{0, -0.5, -.005},
+		{1, -0.5, -.005}
 	};
 
 	vector<pair<int, int> > start_tri_edges {
@@ -87,11 +86,39 @@ void Environment_handler::update_environment() {
 		std::make_pair(3, 0)
 	};
 
+	vector<Vector> second_tri_vertices {
+		{2.2, 0.5, -.005},
+		{1.2, 0.5, -.005},
+		{1.2, -0.5, -.005},
+		{2.2, -0.5, -.005}
+	};
+
+	vector<pair<int, int> > second_tri_edges {
+		std::make_pair(0, 1),
+		std::make_pair(1, 2),
+		std::make_pair(2, 3),
+		std::make_pair(3, 0)
+	};
+
+	vector<Vector> third_tri_vertices {
+		{3.5, 0, -.005},
+		{2.65, 0, -.005},
+		{2.45, -1, -.005},
+		{3.55, -1, -.005}
+	};
+
+	vector<pair<int, int> > third_tri_edges {
+		std::make_pair(0, 1),
+		std::make_pair(1, 2),
+		std::make_pair(2, 3),
+		std::make_pair(3, 0)
+	};
+
 	vector<Vector> end_tri_vertices {
-		{1.7, 0.5, -.005},
-		{0.7, 0.5, -.005},
-		{0.7, -0.5, -.005},
-		{1.7, -0.5, -.005}
+		{4.2, .9, -.005},
+		{1.2, .9, -.005},
+		{1.2, -.1, -.005},
+		{4.2, -.1, -.005}
 	};
 
 	vector<pair<int, int> > end_tri_edges {
@@ -102,15 +129,22 @@ void Environment_handler::update_environment() {
 	};
 
 	unique_ptr<Tri_mesh> start_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, start_tri_edges, start_tri_vertices});
-	unique_ptr<Tri_mesh> end_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, end_tri_edges, end_tri_vertices});
 
+	unique_ptr<Tri_mesh> second_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, second_tri_edges, second_tri_vertices});
+	unique_ptr<Tri_mesh> third_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, third_tri_edges, third_tri_vertices});
+
+	// unique_ptr<Tri_mesh> middle_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, middle_tri_edges, middle_tri_vertices});
+	// unique_ptr<Tri_mesh> end_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, end_tri_edges, end_tri_vertices});
 
 	// boxes.push_back(move(b1));
 	// boxes.push_back(move(b2));
 	// boxes.push_back(move(ground));
 
 	tri_meshes.push_back(move(start_tri));
-	tri_meshes.push_back(move(end_tri));
+	tri_meshes.push_back(move(second_tri));
+	tri_meshes.push_back(move(third_tri));
+	// tri_meshes.push_back(move(middle_tri));
+	// tri_meshes.push_back(move(end_tri));
 
 	for(unique_ptr<Box> & box : boxes) {
 		box->get_kinbody()->InitFromBoxes(box->get_parameter(), true);
@@ -269,7 +303,7 @@ vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, dou
 // Checks if there are obstacles inside radius r of sampled point above the surface
 bool Environment_handler::point_free_space(const Tri_mesh & tri_mesh, dReal r,
 										   RaveTransformMatrix<dReal> tf) {
-	return true; 
+	return true;
 	//TODO : complete this fn
 }
 
