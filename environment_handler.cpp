@@ -73,10 +73,10 @@ void Environment_handler::update_environment() {
 	unique_ptr<Box> b2 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
 
 	vector<Vector> start_tri_vertices {
-		{1, 0.5, -.005},
-		{0, 0.5, -.005},
-		{0, -0.5, -.005},
-		{1, -0.5, -.005}
+		{1, 1, -.005},
+		{0, 1, -.005},
+		{0, 0, -.005},
+		{1, 0, -.005}
 	};
 
 	vector<pair<int, int> > start_tri_edges {
@@ -87,10 +87,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> second_tri_vertices {
-		{2.2, 0.5, -.005},
-		{1.2, 0.5, -.005},
-		{1.2, -0.5, -.005},
-		{2.2, -0.5, -.005}
+		{2.2, 1, -.005},
+		{1.2, 1, -.005},
+		{1.2, 0, -.005},
+		{2.2, 0, -.005}
 	};
 
 	vector<pair<int, int> > second_tri_edges {
