@@ -93,11 +93,30 @@ vector<Contact> Motion_plan_library::transform_plan(const vector<Contact> & c_se
 	
 	vector<Contact> transformed_plan = c_seq;
 
+	bool seen_left_foot = false;
+	bool seen_right_foot = false;
+	bool seen_left_hand = false;
+	bool seen_right_hand = false;
+
 	// first perform "stretches"
 	for(size_t i = 0; i < transformed_plan.size(); ++i) {
 		// find "pivot" footstep
-		bool found_pivot_pose = false;
 		const Contact &curr_pose = transformed_plan[i];
+
+		// cannot stretch/compress first instance of a manipulator
+		if(!seen_left_foot && curr_pose.manip == Manip::L_foot) {
+			seen_left_foot = true;
+			continue;
+		} else if(!seen_right_foot && curr_pose.manip == Manip::R_foot) {
+			seen_right_foot = true;
+			continue;
+		} else if(!seen_left_hand && curr_pose.manip == Manip::L_hand) {
+			seen_left_hand = true;
+			continue;
+		} else if(!seen_right_hand && curr_pose.manip == Manip::R_hand) {
+			seen_right_hand = true;
+			continue;
+		}
 
 		try {
 			const Contact & pivot_pose = get_pivot_contact(transformed_plan, i);
@@ -329,7 +348,7 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 
 	}
 
-	usleep(10000000);
+	// usleep(10000000);
 
 	for(int d = 0; d < 100; ++d) {
 		dh.ClearHandler();
