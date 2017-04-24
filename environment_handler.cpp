@@ -87,10 +87,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> second_tri_vertices {
-		{2.3, 1.5, .1},
+		{2.3, 1.5, .4},
 		{1.3, 1.5, .1},
 		{1.3, 0.5, .1},
-		{2.3, 0.5, .1}
+		{2.3, 0.5, .4}
 	};
 
 	vector<pair<int, int> > second_tri_edges {
@@ -130,7 +130,7 @@ void Environment_handler::update_environment() {
 
 	unique_ptr<Tri_mesh> start_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, start_tri_edges, start_tri_vertices});
 
-	unique_ptr<Tri_mesh> second_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, second_tri_edges, second_tri_vertices});
+	unique_ptr<Tri_mesh> second_tri (new Tri_mesh{RaveCreateKinBody(penv), {-.35, 0, 1}, second_tri_edges, second_tri_vertices});
 	unique_ptr<Tri_mesh> third_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, third_tri_edges, third_tri_vertices});
 
 	// unique_ptr<Tri_mesh> middle_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, middle_tri_edges, middle_tri_vertices});
@@ -158,9 +158,9 @@ void Environment_handler::update_environment() {
 		penv->Add(tri_mesh->get_kinbody());
 	}
 
-	vector<Contact_region> crs = get_contact_regions();
+	// vector<Contact_region> crs = get_contact_regions();
 	// for(const auto & cr: crs) {
-	// 	dh.DrawRegion(cr.position, cr.normal, cr.radius, 1);
+	// 	dh.DrawRegion({cr.position.x, cr.position.y, cr.position.z + .001}, cr.normal, cr.radius, 1);
 	// }
 }
 
