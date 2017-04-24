@@ -87,10 +87,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> second_tri_vertices {
-		{2.2, 1, -.005},
+		{2, 1, -.005},
 		{1.2, 1, -.005},
 		{1.2, 0, -.005},
-		{2.2, 0, -.005}
+		{2, 0, -.005}
 	};
 
 	vector<pair<int, int> > second_tri_edges {
@@ -142,7 +142,7 @@ void Environment_handler::update_environment() {
 
 	tri_meshes.push_back(move(start_tri));
 	tri_meshes.push_back(move(second_tri));
-	tri_meshes.push_back(move(third_tri));
+	// tri_meshes.push_back(move(third_tri));
 	// tri_meshes.push_back(move(middle_tri));
 	// tri_meshes.push_back(move(end_tri));
 

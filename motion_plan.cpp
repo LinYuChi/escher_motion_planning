@@ -18,7 +18,7 @@ using std::numeric_limits; using std::max;
 
 const int max_opt_iter_c = 100;
 const dReal attractive_range_c = 0.3;
-const dReal max_delta_size_c = 0.02;
+const dReal max_delta_size_c = 0.002;
 
 dReal motion_plan_bucket_size_c = .5; 
 
@@ -185,22 +185,21 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    vector<GRBVar> delta_s_x(global_c_seq.size());
 	    vector<GRBVar> delta_s_y(global_c_seq.size());
 	    vector<GRBVar> delta_s_z(global_c_seq.size());
-	   //  for(int i = 0; i < global_c_seq.size(); ++i) {
-	   //  	if(i == 0 || i == 1) { // generalize to acyclic motion with hand placements
-				// delta_s_x[i] = model.addVar(0.0, 0.0, 0.0, GRB_CONTINUOUS, "delta_s_x_of_" + i);
-				// delta_s_y[i] = model.addVar(0.0, 0.0, 0.0, GRB_CONTINUOUS, "delta_s_y_of_" + i);
-				// delta_s_z[i] = model.addVar(0.0, 0.0, 0.0, GRB_CONTINUOUS, "delta_s_z_of_" + i);
-				// continue;
-	   //  	}
 
-	   //  	delta_s_x[i] = model.addVar(.2 - mp_vars.s_x[i], .4 - mp_vars.s_x[i], 0.0, GRB_CONTINUOUS, "delta_s_x_of_" + i);
-	   //  	if(global_c_seq[i].manip == Manip::L_foot) {
-	   //  		delta_s_y[i] = model.addVar(0.2 - mp_vars.s_y[i], 0.4 - mp_vars.s_y[i], 0.0, GRB_CONTINUOUS, "delta_s_y_of_" + i);
-	   //  	} else if(global_c_seq[i].manip == Manip::R_foot) {
-	   //  		delta_s_y[i] = model.addVar(-0.4 - mp_vars.s_y[i], -0.2 - mp_vars.s_y[i], 0.0, GRB_CONTINUOUS, "delta_s_y_of_" + i);
-	   //  	}
-	   //  	delta_s_z[i] = model.addVar(-0.6 - mp_vars.s_z[i], 0.6 - mp_vars.s_z[i], 0.0, GRB_CONTINUOUS, "delta_s_z_of_" + i);
-	   //  }
+	    for(int i = 0; i < global_c_seq.size(); ++i) {
+
+	    	if(i == 0 || i == 1) { // generalize to acyclic motion with hand placements
+				continue;
+	    	}
+
+	    	delta_s_x[i] = model.addVar(.1 - mp_vars.s_x[i], .4 - mp_vars.s_x[i], 0.0, GRB_CONTINUOUS, "delta_s_x_of_" + i);
+	    	if(global_c_seq[i].manip == Manip::L_foot) {
+	    		delta_s_y[i] = model.addVar(0.2 - mp_vars.s_y[i], 0.4 - mp_vars.s_y[i], 0.0, GRB_CONTINUOUS, "delta_s_y_of_" + i);
+	    	} else if(global_c_seq[i].manip == Manip::R_foot) {
+	    		delta_s_y[i] = model.addVar(-0.4 - mp_vars.s_y[i], -0.2 - mp_vars.s_y[i], 0.0, GRB_CONTINUOUS, "delta_s_y_of_" + i);
+	    	}
+	    	delta_s_z[i] = model.addVar(-0.6 - mp_vars.s_z[i], 0.6 - mp_vars.s_z[i], 0.0, GRB_CONTINUOUS, "delta_s_z_of_" + i);
+	    }
 
 	    // start region constraints
 	    model.addConstr(mp_vars.x_mp + delta_x_mp <= 1);
@@ -217,22 +216,22 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    	GRBLinExpr delta_x_i = 0;
 	    	delta_x_i += delta_x_mp;
 	    	delta_x_i += theta_mp_x_pd[i]*delta_theta_mp;
-	    	// for(int j = 0; j <= i; ++j) {
-	    	// 	delta_x_i += delta_s_x[j] * cos(mp_vars.theta_mp) - delta_s_y[j] * sin(mp_vars.theta_mp);
-	    	// }
+	    	for(int j = 2; j <= i; ++j) {
+	    		delta_x_i += delta_s_x[j] * cos(mp_vars.theta_mp) - delta_s_y[j] * sin(mp_vars.theta_mp);
+	    	}
 
 	    	GRBLinExpr delta_y_i = 0;
 	    	delta_y_i += delta_y_mp;
 	    	delta_y_i += theta_mp_y_pd[i]*delta_theta_mp;
-	    	// for(int j = 0; j <= i; ++j) {
-	    	// 	delta_y_i += delta_s_x[j] * sin(mp_vars.theta_mp) + delta_s_y[j] * cos(mp_vars.theta_mp);
-	    	// }
+	    	for(int j = 2; j <= i; ++j) {
+	    		delta_y_i += delta_s_y[j] * sin(mp_vars.theta_mp) + delta_s_y[j] * cos(mp_vars.theta_mp);
+	    	}
 
 	    	GRBLinExpr delta_z_i = 0;
 	    	delta_z_i += delta_z_mp;
-	    	// for(int j = 0; j <= i; ++j) {
-	    	// 	delta_z_i += delta_s_z[j];
-	    	// }
+	    	for(int j = 2; j <= i; ++j) {
+	    		delta_z_i += delta_s_z[j];
+	    	}
 
 	    	obj += (delta_x_i - attractive_vecs[i].x)*(delta_x_i - attractive_vecs[i].x) + 
 	    		   (delta_y_i - attractive_vecs[i].y)*(delta_y_i - attractive_vecs[i].y) + 
@@ -247,14 +246,20 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    delta.y_mp = delta_y_mp.get(GRB_DoubleAttr_X);
 	    delta.z_mp = delta_z_mp.get(GRB_DoubleAttr_X);
 	    delta.theta_mp = delta_theta_mp.get(GRB_DoubleAttr_X);
-	    // delta.s_x.resize(delta_s_x.size());
-	    // delta.s_y.resize(delta_s_y.size());
-	    // delta.s_z.resize(delta_s_z.size());
-	    // for(int i = 0; i < delta_s_x.size(); ++i) {
-	    // 	delta.s_x[i] = delta_s_x[i].get(GRB_DoubleAttr_X);
-	    // 	delta.s_y[i] = delta_s_y[i].get(GRB_DoubleAttr_X);
-	    // 	delta.s_z[i] = delta_s_z[i].get(GRB_DoubleAttr_X);
-	    // }
+	    delta.s_x.resize(delta_s_x.size());
+	    delta.s_y.resize(delta_s_y.size());
+	    delta.s_z.resize(delta_s_z.size());
+	    delta.s_x[0] = 0;
+	    delta.s_y[0] = 0;
+	    delta.s_z[0] = 0;
+	    delta.s_x[1] = 0;
+	    delta.s_y[1] = 0;
+	    delta.s_z[1] = 0;
+	    for(int i = 2; i < delta_s_x.size(); ++i) {
+	    	delta.s_x[i] = delta_s_x[i].get(GRB_DoubleAttr_X);
+	    	delta.s_y[i] = delta_s_y[i].get(GRB_DoubleAttr_X);
+	    	delta.s_z[i] = delta_s_z[i].get(GRB_DoubleAttr_X);
+	    }
 	    model.reset();
 	    return delta;
 	} catch(GRBException e) {
@@ -265,15 +270,16 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 
 }
 
-void scale_deltas(Mp_optimization_vars & optimization_deltas) {
+// returns "delta size", an indication of how much change this iteration of the optimizer has suggested
+dReal scale_deltas(Mp_optimization_vars & optimization_deltas) {
 	dReal delta_size = pow(optimization_deltas.x_mp, 2) + pow(optimization_deltas.y_mp, 2) + pow(optimization_deltas.z_mp, 2) + pow(optimization_deltas.theta_mp, 2);
-	// dReal stretch_size = 0.;
-	// for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
-	// 	stretch_size += pow(optimization_deltas.s_x[i], 2) + pow(optimization_deltas.s_y[i], 2) + pow(optimization_deltas.s_z[i], 2);
-	// }
+	dReal stretch_size = 0.;
+	for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
+		stretch_size += pow(optimization_deltas.s_x[i], 2) + pow(optimization_deltas.s_y[i], 2) + pow(optimization_deltas.s_z[i], 2);
+	}
 
-	// stretch_size /= optimization_deltas.s_x.size();
-	// delta_size += stretch_size;
+	stretch_size /= optimization_deltas.s_x.size();
+	delta_size += stretch_size;
 
 	if(delta_size > max_delta_size_c) { // maybe choose something less random, with weights on each variable :)
 		dReal scale_factor = max_delta_size_c / delta_size;
@@ -283,16 +289,18 @@ void scale_deltas(Mp_optimization_vars & optimization_deltas) {
 		optimization_deltas.z_mp *= scale_factor;
 		optimization_deltas.theta_mp *= scale_factor;
 
-	// 	for(dReal & s : optimization_deltas.s_x) {
-	// 		s *= scale_factor;
-	// 	}
-	// 	for(dReal & s : optimization_deltas.s_y) {
-	// 		s *= scale_factor;
-	// 	}
-	// 	for(dReal & s : optimization_deltas.s_z) {
-	// 		s *= scale_factor;
-	// 	}
+		for(dReal & s : optimization_deltas.s_x) {
+			s *= scale_factor;
+		}
+		for(dReal & s : optimization_deltas.s_y) {
+			s *= scale_factor;
+		}
+		for(dReal & s : optimization_deltas.s_z) {
+			s *= scale_factor;
+		}
 	}
+
+	return delta_size;
 }
 
 void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_region> & contact_regions,
@@ -349,7 +357,7 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 
 	}
 
-	// usleep(10000000);
+	usleep(1000000);
 
 	for(int d = 0; d < 100; ++d) {
 		dh.ClearHandler();
@@ -387,29 +395,31 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 		Mp_optimization_vars optimization_deltas = optimize_plan(global_c_seq, mp_optim, attractive_vecs,
 																 theta_mp_x_pd, theta_mp_y_pd);
 
-		// std::cout << "=============OPTIMIZATION RESULTS===========" << std::endl;
-		// std::cout << "delta x_mp: " << optimization_deltas.x_mp << std::endl;
-		// std::cout << "delta y_mp: " << optimization_deltas.y_mp << std::endl;
-		// std::cout << "delta z_mp: " << optimization_deltas.z_mp << std::endl;
-		// std::cout << "delta theta_mp: " << optimization_deltas.theta_mp << std::endl;
-		// for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
-		// 	std::cout << "s_x at " << i << ": " << optimization_deltas.s_x[i] << std::endl;
-		// 	std::cout << "s_y at " << i << ": " << optimization_deltas.s_y[i] << std::endl;
-		// 	std::cout << "s_z at " << i << ": " << optimization_deltas.s_z[i] << std::endl;
-		// }
+		std::cout << "=============OPTIMIZATION RESULTS===========" << std::endl;
+		std::cout << "delta x_mp: " << optimization_deltas.x_mp << std::endl;
+		std::cout << "delta y_mp: " << optimization_deltas.y_mp << std::endl;
+		std::cout << "delta z_mp: " << optimization_deltas.z_mp << std::endl;
+		std::cout << "delta theta_mp: " << optimization_deltas.theta_mp << std::endl;
+		for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
+			std::cout << "s_x at " << i << ": " << optimization_deltas.s_x[i] << std::endl;
+			std::cout << "s_y at " << i << ": " << optimization_deltas.s_y[i] << std::endl;
+			std::cout << "s_z at " << i << ": " << optimization_deltas.s_z[i] << std::endl;
+		}
 
-		scale_deltas(optimization_deltas);
+		if(scale_deltas(optimization_deltas) == 0) {
+			break;
+		}
 
 		// apply changes, move small step
 		mp_optim.x_mp += optimization_deltas.x_mp;
 		mp_optim.y_mp += optimization_deltas.y_mp;
 		mp_optim.z_mp += optimization_deltas.z_mp;
 		mp_optim.theta_mp += optimization_deltas.theta_mp;
-		// for(int i = 0; i < local_c_seq.size(); ++i) {
-		// 	mp_optim.s_x[i] += optimization_deltas.s_x[i];
-		// 	mp_optim.s_y[i] += optimization_deltas.s_y[i];
-		// 	mp_optim.s_z[i] += optimization_deltas.s_z[i];
-		// }
+		for(int i = 0; i < local_c_seq.size(); ++i) {
+			mp_optim.s_x[i] += optimization_deltas.s_x[i];
+			mp_optim.s_y[i] += optimization_deltas.s_y[i];
+			mp_optim.s_z[i] += optimization_deltas.s_z[i];
+		}
 
 		// re-calculate global contact sequence
 
