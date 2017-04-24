@@ -20,7 +20,7 @@ const int max_opt_iter_c = 100;
 const dReal attractive_range_c = 0.3;
 const dReal max_delta_size_c = 0.002;
 
-dReal motion_plan_bucket_size_c = .5; 
+const dReal motion_plan_bucket_size_c = .5; 
 
 bool is_valid_manip(Manip manip) {
 	return manip == Manip::L_foot || manip == Manip::R_foot || manip == Manip::L_hand || manip == Manip::R_hand;

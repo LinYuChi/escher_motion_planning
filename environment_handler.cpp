@@ -87,10 +87,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> second_tri_vertices {
-		{2, 1, -.005},
-		{1.2, 1, -.005},
-		{1.2, 0, -.005},
-		{2, 0, -.005}
+		{2.3, 1.5, .1},
+		{1.3, 1.5, .1},
+		{1.3, 0.5, .1},
+		{2.3, 0.5, .1}
 	};
 
 	vector<pair<int, int> > second_tri_edges {
@@ -158,9 +158,8 @@ void Environment_handler::update_environment() {
 		penv->Add(tri_mesh->get_kinbody());
 	}
 
-	// vector<Contact_region> crs = get_contact_regions();
+	vector<Contact_region> crs = get_contact_regions();
 	// for(const auto & cr: crs) {
-	// 	// std::cout << cr.position.z << std::endl;
 	// 	dh.DrawRegion(cr.position, cr.normal, cr.radius, 1);
 	// }
 }
@@ -265,8 +264,6 @@ vector<Vector> Environment_handler::sample_points(const Tri_mesh & tri_mesh, dou
 
 	for(dReal proj_x = tri_mesh.get_min_proj_x(); proj_x < tri_mesh.get_max_proj_x(); proj_x += resolution) {
 		for(dReal proj_y = tri_mesh.get_min_proj_y(); proj_y < tri_mesh.get_max_proj_y(); proj_y += resolution) {
-			// std::cout << "x: " << proj_x << std::endl;
-			// std::cout << "y: " << proj_y << std::endl;
 
 			pair<dReal, dReal> curr_proj{proj_x, proj_y};
 			Vector curr_proj_point{curr_proj.first, curr_proj.second, 0}; // flatten to two dimensions
@@ -329,12 +326,13 @@ vector<Contact_region> Environment_handler::get_contact_regions() const {
 			int rand_sample_ind = rand() % non_occupied_contact_samples.size();
 			Vector rand_contact = non_occupied_contact_samples[rand_sample_ind];
 
+			dReal r = rand_contact.z;
+			rand_contact.z = 0;
 			Vector center = tri_tf * rand_contact;
 			Vector normal = tri_mesh->get_normal() * -1;
-			dReal r = center.z;
 
 			if(r > .01)
-				ret_regions.push_back({{center.x, center.y, 0}, tri_mesh->get_normal(), r});
+				ret_regions.push_back({center, tri_mesh->get_normal(), r});
 		
 			auto it = non_occupied_contact_samples.begin();
 			while (it != non_occupied_contact_samples.end()) {
