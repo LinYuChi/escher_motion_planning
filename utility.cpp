@@ -42,4 +42,4 @@ RaveTransformMatrix<dReal> get_SO3(const RPY_tf & e) {
 	return ret_mat;
 }
 
-// SE(3) is similar, 
+// SE(3) is similar

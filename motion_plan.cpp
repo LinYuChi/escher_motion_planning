@@ -271,6 +271,7 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 }
 
 // returns "delta size", an indication of how much change this iteration of the optimizer has suggested
+// scales passed in optimization deltas passed by reference
 dReal scale_deltas(Mp_optimization_vars & optimization_deltas) {
 	dReal delta_size = pow(optimization_deltas.x_mp, 2) + pow(optimization_deltas.y_mp, 2) + pow(optimization_deltas.z_mp, 2) + pow(optimization_deltas.theta_mp, 2);
 	dReal stretch_size = 0.;
@@ -362,7 +363,7 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 	for(int d = 0; d < 100; ++d) {
 		dh.ClearHandler();
 		for(int i = 0; i < global_c_seq.size(); ++i) {
-			dh.DrawRegion({global_c_seq[i].tf.x, global_c_seq[i].tf.y, global_c_seq[i].tf.z}, {0, 0, 1}, 0.05, 1);
+			dh.DrawRegion({global_c_seq[i].tf.x, global_c_seq[i].tf.y, global_c_seq[i].tf.z + .01}, {0, 0, 1}, 0.05, 1);
 		}
 
 		usleep(100000);
@@ -388,23 +389,23 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 		vector<Vector> attractive_vecs(global_c_seq.size());
 		for(int i = 0; i < global_c_seq.size(); ++i) {
 			attractive_vecs[i] = get_attractive_vector(contact_regions, global_c_seq[i]);
-			std::cout << "a_vec[" << i << "] = " << attractive_vecs[i] << std::endl;
+			// std::cout << "a_vec[" << i << "] = " << attractive_vecs[i] << std::endl;
 		}
 
 		// optimize motion plan variables
 		Mp_optimization_vars optimization_deltas = optimize_plan(global_c_seq, mp_optim, attractive_vecs,
 																 theta_mp_x_pd, theta_mp_y_pd);
 
-		std::cout << "=============OPTIMIZATION RESULTS===========" << std::endl;
-		std::cout << "delta x_mp: " << optimization_deltas.x_mp << std::endl;
-		std::cout << "delta y_mp: " << optimization_deltas.y_mp << std::endl;
-		std::cout << "delta z_mp: " << optimization_deltas.z_mp << std::endl;
-		std::cout << "delta theta_mp: " << optimization_deltas.theta_mp << std::endl;
-		for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
-			std::cout << "s_x at " << i << ": " << optimization_deltas.s_x[i] << std::endl;
-			std::cout << "s_y at " << i << ": " << optimization_deltas.s_y[i] << std::endl;
-			std::cout << "s_z at " << i << ": " << optimization_deltas.s_z[i] << std::endl;
-		}
+		// std::cout << "=============OPTIMIZATION RESULTS===========" << std::endl;
+		// std::cout << "delta x_mp: " << optimization_deltas.x_mp << std::endl;
+		// std::cout << "delta y_mp: " << optimization_deltas.y_mp << std::endl;
+		// std::cout << "delta z_mp: " << optimization_deltas.z_mp << std::endl;
+		// std::cout << "delta theta_mp: " << optimization_deltas.theta_mp << std::endl;
+		// for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
+		// 	std::cout << "s_x at " << i << ": " << optimization_deltas.s_x[i] << std::endl;
+		// 	std::cout << "s_y at " << i << ": " << optimization_deltas.s_y[i] << std::endl;
+		// 	std::cout << "s_z at " << i << ": " << optimization_deltas.s_z[i] << std::endl;
+		// }
 
 		if(scale_deltas(optimization_deltas) == 0) {
 			break;
@@ -432,7 +433,7 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 	}
 	dh.ClearHandler();
 	for(int i = 0; i < global_c_seq.size(); ++i) {
-		dh.DrawRegion({global_c_seq[i].tf.x, global_c_seq[i].tf.y, global_c_seq[i].tf.z}, {0, 0, 1}, 0.05, 1);
+		dh.DrawRegion({global_c_seq[i].tf.x, global_c_seq[i].tf.y, global_c_seq[i].tf.z + .01}, {0, 0, 1}, 0.05, 1);
 	}
 
 	usleep(1000000);
