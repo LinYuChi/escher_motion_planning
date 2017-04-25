@@ -224,7 +224,7 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    	delta_y_i += delta_y_mp;
 	    	delta_y_i += theta_mp_y_pd[i]*delta_theta_mp;
 	    	for(int j = 2; j <= i; ++j) {
-	    		delta_y_i += delta_s_y[j] * sin(mp_vars.theta_mp) + delta_s_y[j] * cos(mp_vars.theta_mp);
+	    		delta_y_i += delta_s_x[j] * sin(mp_vars.theta_mp) + delta_s_y[j] * cos(mp_vars.theta_mp);
 	    	}
 
 	    	GRBLinExpr delta_z_i = 0;
