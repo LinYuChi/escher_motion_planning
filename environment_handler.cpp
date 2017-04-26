@@ -73,10 +73,10 @@ void Environment_handler::update_environment() {
 	unique_ptr<Box> b2 (new General_box{RaveCreateKinBody(penv), -2, -3, .1, 0, .5, .5});
 
 	vector<Vector> start_tri_vertices {
-		{1, 1, -.005},
-		{0, 1, -.005},
-		{0, 0, -.005},
-		{1, 0, -.005}
+		{0.8, 0.5, -.005},
+		{0, 0.5, -.005},
+		{0, -0.5, -.005},
+		{0.8, -0.5, -.005}
 	};
 
 	vector<pair<int, int> > start_tri_edges {
@@ -87,10 +87,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> second_tri_vertices {
-		{2.3, 1.5, .4},
-		{1.3, 1.5, .1},
-		{1.3, 0.5, .1},
-		{2.3, 0.5, .4}
+		{1.85, .7, -.005},
+		{1, .7, -.005},
+		{1, -0.2, -.005},
+		{1.85, -0.2, -.005}
 	};
 
 	vector<pair<int, int> > second_tri_edges {
@@ -101,10 +101,10 @@ void Environment_handler::update_environment() {
 	};
 
 	vector<Vector> third_tri_vertices {
-		{3.5, 0, -.005},
-		{2.65, 0, -.005},
-		{2.45, -1, -.005},
-		{3.55, -1, -.005}
+		{2.8, .9, -.005},
+		{2, .9, -.005},
+		{2.15, 0, -.005},
+		{2.8, 0, -.005}
 	};
 
 	vector<pair<int, int> > third_tri_edges {
@@ -130,7 +130,7 @@ void Environment_handler::update_environment() {
 
 	unique_ptr<Tri_mesh> start_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, start_tri_edges, start_tri_vertices});
 
-	unique_ptr<Tri_mesh> second_tri (new Tri_mesh{RaveCreateKinBody(penv), {-.35, 0, 1}, second_tri_edges, second_tri_vertices});
+	unique_ptr<Tri_mesh> second_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, second_tri_edges, second_tri_vertices});
 	unique_ptr<Tri_mesh> third_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, third_tri_edges, third_tri_vertices});
 
 	// unique_ptr<Tri_mesh> middle_tri (new Tri_mesh{RaveCreateKinBody(penv), {0, 0, 1}, middle_tri_edges, middle_tri_vertices});
@@ -142,7 +142,7 @@ void Environment_handler::update_environment() {
 
 	tri_meshes.push_back(move(start_tri));
 	tri_meshes.push_back(move(second_tri));
-	// tri_meshes.push_back(move(third_tri));
+	tri_meshes.push_back(move(third_tri));
 	// tri_meshes.push_back(move(middle_tri));
 	// tri_meshes.push_back(move(end_tri));
 
