@@ -90,7 +90,7 @@ def main():
 
     # print("python env pointer: " + RaveGetEnvironment())
 
-    SendStartPlanningCommand(EscherMotionPlanning,robotname=robot.GetName(),goal=[1.0,0.0,0.0],parallelization=True)
+    SendStartPlanningCommand(EscherMotionPlanning,robotname=robot.GetName(),goal=[2.5,0.5,0.0],parallelization=True)
 
     raw_input("Press enter to exit...")
     # import IPython; IPython.embed();

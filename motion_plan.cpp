@@ -19,6 +19,7 @@ using std::numeric_limits; using std::max;
 const int max_opt_iter_c = 100;
 const dReal attractive_range_c = 0.3;
 const dReal max_delta_size_c = 0.002;
+const dReal min_delta_size_c = 0.0005;
 
 const dReal motion_plan_bucket_size_c = .5; 
 
@@ -85,12 +86,26 @@ Vector get_attractive_vector(const vector<Contact_region> & contact_regions, Con
 	return attractive_vec;
 }
 
+struct Mp_optimization_vars {
+	dReal x_mp;
+	dReal y_mp;
+	dReal z_mp;
+	dReal theta_mp;
+	vector<dReal> s_x;
+	vector<dReal> s_y;
+	vector<dReal> s_z;
+};
+
 // can make this more efficient based on usage
 // accounts for acyclic motion
-vector<Contact> Motion_plan_library::transform_plan(const vector<Contact> & c_seq, dReal x_mp, dReal y_mp,
-													dReal z_mp, dReal theta_mp, const vector<Vector> & s) const {
-	assert(s.size() == c_seq.size());
+vector<Contact> Motion_plan_library::transform_plan(const vector<Contact> & c_seq, const Mp_optimization_vars & mp_vars) const {
+	assert(mp_vars.s_x.size() == c_seq.size());
 	
+	vector<Vector> s(c_seq.size());
+	for(int i = 0; i < c_seq.size(); ++i) {
+		s[i] = {mp_vars.s_x[i], mp_vars.s_y[i], mp_vars.s_z[i]};
+	}
+
 	vector<Contact> transformed_plan = c_seq;
 
 	bool seen_left_foot = false;
@@ -141,35 +156,26 @@ vector<Contact> Motion_plan_library::transform_plan(const vector<Contact> & c_se
 		Vector pos{curr_pose.tf.x, curr_pose.tf.y, 0};
 		dReal r = sqrt(pos.lengthsqr2());
 		dReal curr_pose_phi = atan2(pos.y, pos.x);
-		curr_pose.tf.x = r * cos(theta_mp + curr_pose_phi);
-		curr_pose.tf.y = r * sin(theta_mp + curr_pose_phi);
+		curr_pose.tf.x = r * cos(mp_vars.theta_mp + curr_pose_phi);
+		curr_pose.tf.y = r * sin(mp_vars.theta_mp + curr_pose_phi);
+		curr_pose.tf.yaw = c_seq[i].tf.yaw + mp_vars.theta_mp;
 	}
 
 	// perform "translations"
 	for(size_t i = 0; i < transformed_plan.size(); ++i) {
 		Contact &curr_pose = transformed_plan[i];
 
-		curr_pose.tf.x += x_mp;
-		curr_pose.tf.y += y_mp;
-		curr_pose.tf.z += z_mp;
+		curr_pose.tf.x += mp_vars.x_mp;
+		curr_pose.tf.y += mp_vars.y_mp;
+		curr_pose.tf.z += mp_vars.z_mp;
 	}
 
 	return transformed_plan;
 }
 
-struct Mp_optimization_vars {
-	dReal x_mp;
-	dReal y_mp;
-	dReal z_mp;
-	dReal theta_mp;
-	vector<dReal> s_x;
-	vector<dReal> s_y;
-	vector<dReal> s_z;
-};
-
 Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const Mp_optimization_vars & mp_vars,
 								   const vector<Vector> & attractive_vecs, const vector<dReal> & theta_mp_x_pd,
-								   const vector<dReal> & theta_mp_y_pd) {
+								   const vector<dReal> & theta_mp_y_pd, const Vector & start, const Vector & goal) {
 
 	try {
 	    // initialize gurobi
@@ -202,16 +208,17 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    }
 
 	    // start region constraints
-	    model.addConstr(mp_vars.x_mp + delta_x_mp <= 1);
-	    model.addConstr(mp_vars.x_mp + delta_x_mp >= 0);
-	    model.addConstr(mp_vars.y_mp + delta_y_mp <= 0.5);
-	    model.addConstr(mp_vars.y_mp + delta_y_mp >= -0.5);
+	    model.addQConstr((mp_vars.x_mp + delta_x_mp - start.x)*(mp_vars.x_mp + delta_x_mp - start.x) +
+	    				(mp_vars.y_mp + delta_y_mp - start.y)*(mp_vars.y_mp + delta_y_mp - start.y) - start[3]*start[3] <= 0);
+
 
 	    // set objective
 	    GRBQuadExpr obj;
 
 	    // minimize distance to contact regions
-
+	    GRBLinExpr final_cp_delta_x;
+	    GRBLinExpr final_cp_delta_y;
+	    GRBLinExpr final_cp_delta_z;
 	    for(int i = 0; i < attractive_vecs.size(); ++i) {
 	    	GRBLinExpr delta_x_i = 0;
 	    	delta_x_i += delta_x_mp;
@@ -233,14 +240,32 @@ Mp_optimization_vars optimize_plan(const vector<Contact> & global_c_seq, const M
 	    		delta_z_i += delta_s_z[j];
 	    	}
 
+	    	if(i == attractive_vecs.size() - 1) {
+	    		final_cp_delta_x = delta_x_i;
+	    		final_cp_delta_y = delta_y_i;
+	    		final_cp_delta_z = delta_z_i;
+	    	}
 	    	obj += (delta_x_i - attractive_vecs[i].x)*(delta_x_i - attractive_vecs[i].x) + 
 	    		   (delta_y_i - attractive_vecs[i].y)*(delta_y_i - attractive_vecs[i].y) + 
 	    		   (delta_z_i - attractive_vecs[i].z)*(delta_z_i - attractive_vecs[i].z);
 	    }
 
+	    // goal region constraints if within goal region
+	    if(euclidean_distance_2d({global_c_seq.back().tf.x, global_c_seq.back().tf.y, 0}, goal) < goal[3]) {
+		    model.addQConstr((global_c_seq.back().tf.x + final_cp_delta_x - goal.x)*(global_c_seq.back().tf.x + final_cp_delta_x - goal.x) +
+		    				(global_c_seq.back().tf.y + final_cp_delta_y - goal.y)*(global_c_seq.back().tf.y + final_cp_delta_y - goal.y) -
+		    					goal[3]*goal[3] <= 0);
+	    } else {
+	    	// end goal constraint is represented as a task if not within region
+	    	obj += 100*(global_c_seq.back().tf.x + final_cp_delta_x - goal.x)*(global_c_seq.back().tf.x + final_cp_delta_x - goal.x) +
+		    				(global_c_seq.back().tf.y + final_cp_delta_y - goal.y)*(global_c_seq.back().tf.y + final_cp_delta_y - goal.y) -
+		    					goal[3]*goal[3];
+	    }
+
 	    model.setObjective(obj);
 	    model.optimize();
 
+	    // data structure conversion
 	    Mp_optimization_vars delta;
 	    delta.x_mp = delta_x_mp.get(GRB_DoubleAttr_X);
 	    delta.y_mp = delta_y_mp.get(GRB_DoubleAttr_X);
@@ -304,6 +329,8 @@ dReal scale_deltas(Mp_optimization_vars & optimization_deltas) {
 	return delta_size;
 }
 
+// should return motion plans in order of most likely to fit environment
+// start/goal are packed as [x,y,z,radius]
 void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_region> & contact_regions,
 											   const Vector & start, const Vector & goal) const {
 	
@@ -321,22 +348,18 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 	// for(const Motion_plan_cluster & cluster : it->second) {
 		// snap cluster representative to environment
 
-	// use safer c++ map semantics
 	// const Motion_plan & cluster_rep = motion_plans[cluster.plan_indices[cluster.representative_index]];
 
 	const vector<Contact> & local_c_seq = cluster_rep.contact_sequence;
 	assert(local_c_seq.size() > 1);
 
 	vector<Contact> global_c_seq = cluster_rep.contact_sequence;
-	// for(int i = 0; i < global_c_seq.size(); ++i) {
-	// 	std::cout << global_c_seq[i].tf.x << " " << global_c_seq[i].tf.y << " " << global_c_seq[i].tf.z << std::endl;
-	// }
 	
 	Mp_optimization_vars mp_optim;
-	mp_optim.x_mp = 0;
-	mp_optim.y_mp = 0;
-	mp_optim.z_mp = 0;
-	mp_optim.theta_mp = 0;
+	mp_optim.x_mp = start.x;
+	mp_optim.y_mp = start.y;
+	mp_optim.z_mp = start.z;
+	mp_optim.theta_mp = atan2(goal.y - start.y, goal.x - start.x);
 	mp_optim.s_x.resize(local_c_seq.size());
 	mp_optim.s_y.resize(local_c_seq.size());
 	mp_optim.s_z.resize(local_c_seq.size());
@@ -358,13 +381,16 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 
 	}
 
-	usleep(1000000);
+	global_c_seq = transform_plan(local_c_seq, mp_optim);
 
-	for(int d = 0; d < 100; ++d) {
+	for(int d = 0; d < max_opt_iter_c; ++d) {
+
 		dh.ClearHandler();
 		for(int i = 0; i < global_c_seq.size(); ++i) {
 			dh.DrawRegion({global_c_seq[i].tf.x, global_c_seq[i].tf.y, global_c_seq[i].tf.z + .01}, {0, 0, 1}, 0.05, 1);
 		}
+
+		if(!d) usleep(1000000);
 
 		usleep(100000);
 		
@@ -389,25 +415,13 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 		vector<Vector> attractive_vecs(global_c_seq.size());
 		for(int i = 0; i < global_c_seq.size(); ++i) {
 			attractive_vecs[i] = get_attractive_vector(contact_regions, global_c_seq[i]);
-			// std::cout << "a_vec[" << i << "] = " << attractive_vecs[i] << std::endl;
 		}
 
 		// optimize motion plan variables
 		Mp_optimization_vars optimization_deltas = optimize_plan(global_c_seq, mp_optim, attractive_vecs,
-																 theta_mp_x_pd, theta_mp_y_pd);
+																 theta_mp_x_pd, theta_mp_y_pd, start, goal);
 
-		// std::cout << "=============OPTIMIZATION RESULTS===========" << std::endl;
-		// std::cout << "delta x_mp: " << optimization_deltas.x_mp << std::endl;
-		// std::cout << "delta y_mp: " << optimization_deltas.y_mp << std::endl;
-		// std::cout << "delta z_mp: " << optimization_deltas.z_mp << std::endl;
-		// std::cout << "delta theta_mp: " << optimization_deltas.theta_mp << std::endl;
-		// for(int i = 0; i < optimization_deltas.s_x.size(); ++i) {
-		// 	std::cout << "s_x at " << i << ": " << optimization_deltas.s_x[i] << std::endl;
-		// 	std::cout << "s_y at " << i << ": " << optimization_deltas.s_y[i] << std::endl;
-		// 	std::cout << "s_z at " << i << ": " << optimization_deltas.s_z[i] << std::endl;
-		// }
-
-		if(scale_deltas(optimization_deltas) == 0) {
+		if(scale_deltas(optimization_deltas) < min_delta_size_c) {
 			break;
 		}
 
@@ -422,14 +436,8 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 			mp_optim.s_z[i] += optimization_deltas.s_z[i];
 		}
 
-		// re-calculate global contact sequence
-
-		// concatenate together stretch vars
-		vector<Vector> s(local_c_seq.size());
-		for(int i = 0; i < local_c_seq.size(); ++i) {
-			s[i] = {mp_optim.s_x[i], mp_optim.s_y[i], mp_optim.s_z[i]};
-		}
-		global_c_seq = transform_plan(local_c_seq, mp_optim.x_mp, mp_optim.y_mp, mp_optim.z_mp, mp_optim.theta_mp, s);
+		// calculate updated global contact sequence
+		global_c_seq = transform_plan(local_c_seq, mp_optim);
 	}
 	dh.ClearHandler();
 	for(int i = 0; i < global_c_seq.size(); ++i) {
@@ -437,20 +445,9 @@ void Motion_plan_library::query(Drawing_handler & dh, const vector<Contact_regio
 	}
 
 	usleep(1000000);
-	// }
-	
-	std::cout << "x_mp: " << mp_optim.x_mp << std::endl;
-	std::cout << "y_mp: " << mp_optim.y_mp << std::endl;
-	std::cout << "z_mp: " << mp_optim.z_mp << std::endl;
-	std::cout << "theta_mp: " << mp_optim.theta_mp << std::endl;
-	for(int i = 0; i < mp_optim.s_x.size(); ++i) {
-		std::cout << "s_x[" << i << "]: " << mp_optim.s_x[i] << " ";
-		std::cout << "s_y[" << i << "]: " << mp_optim.s_y[i] << " ";
-		std::cout << "s_z[" << i << "]: " << mp_optim.s_z[i] << " ";
-		std::cout << std::endl;
-	}
 }
 
+// INCOMPLETE
 void Motion_plan_library::learn(vector<Contact> contact_sequence) {
 	assert(contact_sequence.size() > 3);
 

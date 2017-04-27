@@ -5,7 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
-
+#include <chrono>
 
 using namespace OpenRAVE;
 using std::vector;
@@ -46,7 +46,7 @@ class EscherMotionPlanning : public ModuleBase
                     {
                         sinput >> _goal[i];
                     }
-                    std::cout<<"The goal is: (x,y,theta) = ("<<_goal[0]<<","<<_goal[1]<<","<<_goal[2]<<")"<<std::endl;
+                    std::cout<<"The goal is: (x,y,z) = ("<<_goal[0]<<","<<_goal[1]<<","<<_goal[2]<<")"<<std::endl;
                 }
 
                 if(strcmp(param.c_str(), "parallelization") == 0)
@@ -89,10 +89,18 @@ class EscherMotionPlanning : public ModuleBase
                 Motion_plan_library mpl;
                 Drawing_handler dh{GetEnv()};
 
-                // mpl.learn(last_plan);
-                mpl.query(dh, env_handler.get_contact_regions(),{},{});
+                std::chrono::time_point<std::chrono::system_clock> start, end;
+                const vector<Contact_region> &cr = env_handler.get_contact_regions();
+                start = std::chrono::system_clock::now();
+
+                mpl.query(dh, cr,{0,0,0, .5},{_goal[0], _goal[1], _goal[2], 0.5});
+
+                end = std::chrono::system_clock::now();
+                std::chrono::duration<double> elapsed_seconds = end-start;
+                cout << elapsed_seconds.count() << " seconds!" << endl;
                 
                 int a;
+                std::cout << "enter any input to exit" << std::endl; 
                 std::cin>>a; // block
             } catch(std::exception & e) {
                 sout << "Exception caught: " << e.what() << "\n";

@@ -9,6 +9,7 @@
 #include <map>
 
 class Drawing_handler;
+struct Mp_optimization_vars;
 
 struct Contact_region {
 	OpenRAVE::Vector position; // region center
@@ -75,13 +76,10 @@ class Motion_plan_library {
 	// map keys represent range [key, key + distance_delta)
 	std::map<OpenRAVE::dReal, std::vector<Motion_plan_cluster>> partitioned_clusters;
 public:
-	std::vector<Contact> transform_plan(const std::vector<Contact> & c_seq, OpenRAVE::dReal x_mp,
-										OpenRAVE::dReal y_mp, OpenRAVE::dReal z_mp, OpenRAVE::dReal theta_mp,
-										const std::vector<OpenRAVE::Vector> & s) const;
-	// append motion plan to library, updating clusters as necessary
-	void append_plan(const Motion_plan & plan);
+	std::vector<Contact> transform_plan(const std::vector<Contact> & c_seq, const Mp_optimization_vars & mp_vars) const;
 
 	// returns motion plans in order of most likely to fit environment
+	// start/goal are packed as [x,y,z,radius]
 	void query(Drawing_handler & dh, const std::vector<Contact_region> & contact_regions,
 								   const OpenRAVE::Vector & start, const OpenRAVE::Vector & goal) const;
 	void learn(std::vector<Contact> contact_sequence);
