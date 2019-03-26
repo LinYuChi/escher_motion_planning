@@ -21,16 +21,16 @@ def load_robot(env, urdf_path=None, srdf_path=None):
 
     robot.GetManipulator('l_arm').SetLocalToolDirection(np.array([1, 0, 0]))
     robot.GetManipulator('l_arm').SetLocalToolTransform(np.array([
-        [0,  1, 0, 0.18],
-        [ -1, 0, 0, -0.025],
+        [0,  1, 0, 0.086],
+        [ -1, 0, 0, -0.03],
         [ 0,  0, 1, 0],
         [ 0,  0, 0, 1]])
     )
 
     robot.GetManipulator('r_arm').SetLocalToolDirection(np.array([1, 0, 0]))
     robot.GetManipulator('r_arm').SetLocalToolTransform(np.array([
-        [ 0,  -1, 0, 0.18],
-        [ 1,  0, 0, 0.025],
+        [ 0,  -1, 0, 0.086],
+        [ 1,  0, 0, 0.03],
         [ 0,  0, 1, 0],
         [ 0,  0, 0, 1]])
     )
